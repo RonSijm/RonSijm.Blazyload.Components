@@ -1,0 +1,96 @@
+@using Microsoft.AspNetCore.Components
+@using RonSijm.Blazyload.Components
+@using RonSijm.Demo.WonderWharf.Contracts
+@using RonSijm.Demo.WonderWharf.Services
+@attribute [BlazyComponent("wonderwharf.events")]
+@inject WharfEventService Events
+
+<section class="event-calendar" data-testid="event-calendar">
+    <p class="component-label">Producer component: <code>EventCalendar</code> / <code>wonderwharf.events</code></p>
+    <h2>@Title</h2>
+    <p>The heading above is the consumer's <code>Title</code> parameter. <code>Model.RestaurantName</code>: <strong data-testid="restaurant-name">@Model?.RestaurantName</strong></p>
+    <p data-testid="wharf-explanation">
+        This component comes from the Wonder Wharf assembly, not Bob's Burgers.
+        Its injected <code>WharfEventService</code> supplies the demo data below.
+        Wonder Wharf's bootstrap registers that service after loading; the consumer doesn't register or reference it.
+    </p>
+    <h3>Service payload, delivered with the feature</h3>
+    <ul data-testid="wharf-events">
+        @foreach (var upcomingEvent in Events.GetUpcomingEvents())
+        {
+            <li>@upcomingEvent.Date.ToString("yyyy-MM-dd"): @upcomingEvent.Name</li>
+        }
+    </ul>
+    <div class="calendar-actions">
+        <img alt="Wonder Wharf" src="_content/RonSijm.Demo.WonderWharf/wharf.svg" />
+        <button data-testid="select-date" @onclick="SelectDateAsync">Send DateSelected callback</button>
+        <span>Sends the first event's date back to Bob's Burgers.</span>
+    </div>
+    <RideSchedule />
+    <section class="producer-notes" aria-label="Producer code and generated contract">
+        <div class="producer-layout">
+            <div>
+                <h3>Wonder Wharf supplies the implementation</h3>
+                <pre><code data-testid="wharf-producer-code">@ProducerCode</code></pre>
+                <p><code>BlazyComponent</code> supplies the discoverable name. These are ordinary Blazor parameters; the callback doesn't need a message bus.</p>
+            </div>
+            <div>
+                <h3>The model ships as a generated contract</h3>
+                <pre><code data-testid="wharf-contract-code">@ModelCode</code></pre>
+                <p>The build exports this marked model and the component-name constants into WonderWharf.Contracts. Wonder Wharf forwards the model type to that assembly; Bob's Burgers references contracts without pulling in this calendar.</p>
+            </div>
+        </div>
+        <h3>Feature assets come along too</h3>
+        <p>The wharf image is a Razor Class Library asset. This card's red border is scoped CSS. The feature also imports <code>_content/RonSijm.Demo.WonderWharf/calendar.js</code>:</p>
+        <p class="asset-result" data-testid="wharf-js">@_moduleMessage</p>
+    </section>
+</section>
+
+@code {
+    private const string ProducerCode = """
+        @attribute [BlazyComponent("wonderwharf.events")]
+        @inject WharfEventService Events
+
+        [Parameter] public string Title { get; set; } = "Wonder Wharf events";
+        [Parameter] public EventCalendarModel? Model { get; set; }
+        [Parameter] public EventCallback<DateOnly> DateSelected { get; set; }
+
+        private Task SelectDateAsync() => DateSelected.InvokeAsync(Events.GetUpcomingEvents()[0].Date);
+        """;
+
+    private const string ModelCode = """
+        // Models\EventCalendarModel.cs in the Wonder Wharf project
+        using RonSijm.Blazyload.Components;
+
+        namespace RonSijm.Demo.WonderWharf.Contracts;
+
+        [BlazyContract]
+        public sealed record EventCalendarModel(string RestaurantName);
+        """;
+
+    [Parameter]
+    public string Title { get; set; } = "Wonder Wharf events";
+
+    [Parameter]
+    public EventCalendarModel? Model { get; set; }
+
+    [Parameter]
+    public EventCallback<DateOnly> DateSelected { get; set; }
+
+    private string? _moduleMessage;
+
+    [Inject]
+    public Microsoft.JSInterop.IJSRuntime JS { get; set; } = null!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && OperatingSystem.IsBrowser())
+        {
+            await using var module = await Microsoft.JSInterop.JSRuntimeExtensions.InvokeAsync<Microsoft.JSInterop.IJSObjectReference>(JS, "import", "./_content/RonSijm.Demo.WonderWharf/calendar.js");
+            _moduleMessage = await Microsoft.JSInterop.JSObjectReferenceExtensions.InvokeAsync<string>(module, "getMessage");
+            StateHasChanged();
+        }
+    }
+
+    private Task SelectDateAsync() => DateSelected.InvokeAsync(Events.GetUpcomingEvents()[0].Date);
+}

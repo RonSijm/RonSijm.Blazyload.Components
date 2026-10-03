@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>RonSijm.Demo.Blazyload.Components.Host</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <BlazyComponentsGenerateManifest>true</BlazyComponentsGenerateManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.*" PrivateAssets="all" />
+    <ProjectReference Include="..\..\..\src\RonSijm.Blazyload.Components\RonSijm.Blazyload.Components.csproj" />
+    <ProjectReference Include="..\RonSijm.Demo.BobsBurgers\RonSijm.Demo.BobsBurgers.csproj" />
+    <ProjectReference Include="..\RonSijm.Demo.WonderWharf\RonSijm.Demo.WonderWharf.csproj" />
+    <BlazyComponentContractReference Include="..\RonSijm.Demo.WonderWharf\RonSijm.Demo.WonderWharf.csproj" />
+    <BlazorWebAssemblyLazyLoad Include="RonSijm.Demo.BobsBurgers.wasm" />
+    <BlazorWebAssemblyLazyLoad Include="RonSijm.Demo.WonderWharf.wasm" />
+    <BlazorWebAssemblyLazyLoad Include="RonSijm.Demo.WonderWharf.Services.wasm" />
+  </ItemGroup>
+  <Target Name="ConfigureGitHubPages" AfterTargets="Publish">
+    <PropertyGroup>
+      <_DemoBaseHref>/</_DemoBaseHref>
+      <_DemoBaseHref Condition="'$(GHPages)' == 'true'">/RonSijm.Blazyload.Components/Extensive/</_DemoBaseHref>
+    </PropertyGroup>
+    <ReadLinesFromFile File="$(PublishDir)wwwroot\index.html">
+      <Output TaskParameter="Lines" ItemName="_GitHubPagesIndexLines" />
+    </ReadLinesFromFile>
+    <WriteLinesToFile File="$(PublishDir)wwwroot\index.html" Lines="@(_GitHubPagesIndexLines->Replace('&lt;base href=&quot;/RonSijm.Blazyload.Components/Extensive/&quot; /&gt;', '&lt;base href=&quot;/&quot; /&gt;')->Replace('&lt;base href=&quot;/&quot; /&gt;', '&lt;base href=&quot;$(_DemoBaseHref)&quot; /&gt;'))" Overwrite="true" Encoding="UTF-8" />
+    <Touch Files="$(PublishDir)wwwroot\.nojekyll" AlwaysCreate="true" Condition="'$(GHPages)' == 'true'" />
+  </Target>
+</Project>

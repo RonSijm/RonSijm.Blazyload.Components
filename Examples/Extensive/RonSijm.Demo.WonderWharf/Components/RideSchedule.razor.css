@@ -1,0 +1,25 @@
+.ride-schedule {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    background: #f1e5cf;
+    color: #29221e;
+}
+
+h3 {
+    margin-top: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.2rem;
+}
+
+pre, p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+pre {
+    white-space: pre-wrap;
+}
+
+code {
+    overflow-wrap: anywhere;
+}

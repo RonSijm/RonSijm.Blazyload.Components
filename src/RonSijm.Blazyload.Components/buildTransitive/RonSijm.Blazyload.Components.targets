@@ -1,0 +1,35 @@
+<Project>
+  <PropertyGroup>
+    <BlazyComponentsGenerateManifest Condition="'$(BlazyComponentsGenerateManifest)' == '' and '$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true'">true</BlazyComponentsGenerateManifest>
+    <BlazyComponentsBuildTaskAssembly Condition="'$(BlazyComponentsBuildTaskAssembly)' == ''">$(MSBuildThisFileDirectory)..\tools\net8.0\RonSijm.Blazyload.Components.Build.dll</BlazyComponentsBuildTaskAssembly>
+    <_BlazyComponentsTaskRuntime>CurrentRuntime</_BlazyComponentsTaskRuntime>
+    <_BlazyComponentsTaskRuntime Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(MSBuildVersion)', '18.0'))">NET</_BlazyComponentsTaskRuntime>
+  </PropertyGroup>
+  <UsingTask TaskName="RonSijm.Blazyload.Components.Build.GenerateBlazyComponentManifest" AssemblyFile="$(BlazyComponentsBuildTaskAssembly)" Runtime="$(_BlazyComponentsTaskRuntime)" Architecture="CurrentArchitecture" />
+  <Target Name="GenerateBlazyComponentManifest" BeforeTargets="ResolveStaticWebAssetsInputs" DependsOnTargets="ResolveReferences" Condition="'$(BlazyComponentsGenerateManifest)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_BlazyComponentsDirectory>$(IntermediateOutputPath)blazy-components\</_BlazyComponentsDirectory>
+      <_BlazyComponentsManifest>$(_BlazyComponentsDirectory)blazy-components.json</_BlazyComponentsManifest>
+      <_BlazyComponentsLinker>$(_BlazyComponentsDirectory)linker.xml</_BlazyComponentsLinker>
+    </PropertyGroup>
+    <GenerateBlazyComponentManifest Assemblies="@(ReferenceCopyLocalPaths);@(BlazyComponentsAssembly)" ManifestPath="$(_BlazyComponentsManifest)" LinkerDescriptorPath="$(_BlazyComponentsLinker)" />
+    <ItemGroup>
+      <_BlazyComponentsAsset Include="$(_BlazyComponentsManifest)" />
+      <FileWrites Include="$(_BlazyComponentsManifest);$(_BlazyComponentsLinker)" />
+    </ItemGroup>
+    <DefineStaticWebAssets CandidateAssets="@(_BlazyComponentsAsset)" RelativePathPattern="**" SourceType="Computed" SourceId="$(PackageId)" ContentRoot="$(_BlazyComponentsDirectory)" BasePath="$(StaticWebAssetBasePath)">
+      <Output TaskParameter="Assets" ItemName="_BlazyComponentsStaticWebAsset" />
+    </DefineStaticWebAssets>
+    <ItemGroup>
+      <StaticWebAsset Include="@(_BlazyComponentsStaticWebAsset)" />
+    </ItemGroup>
+    <DefineStaticWebAssetEndpoints Condition="'$(TargetFramework)' != 'net8.0'" CandidateAssets="@(_BlazyComponentsStaticWebAsset)" ExistingEndpoints="@(StaticWebAssetEndpoint)" ContentTypeMappings="@(StaticWebAssetContentTypeMapping)">
+      <Output TaskParameter="Endpoints" ItemName="StaticWebAssetEndpoint" />
+    </DefineStaticWebAssetEndpoints>
+  </Target>
+  <Target Name="AddBlazyComponentLinkerDescriptor" BeforeTargets="PrepareForILLink" Condition="'$(BlazyComponentsGenerateManifest)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <TrimmerRootDescriptor Include="$(IntermediateOutputPath)blazy-components\linker.xml" />
+    </ItemGroup>
+  </Target>
+</Project>

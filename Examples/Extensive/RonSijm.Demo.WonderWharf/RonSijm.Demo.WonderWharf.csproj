@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <BlazyComponentsExportContracts>true</BlazyComponentsExportContracts>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\RonSijm.Blazyload.Components\RonSijm.Blazyload.Components.csproj" />
+    <ProjectReference Include="..\RonSijm.Demo.WonderWharf.Services\RonSijm.Demo.WonderWharf.Services.csproj" />
+  </ItemGroup>
+</Project>

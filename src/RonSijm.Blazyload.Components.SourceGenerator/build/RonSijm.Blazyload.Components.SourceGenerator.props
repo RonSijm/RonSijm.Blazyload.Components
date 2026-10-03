@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <BlazyComponentsExportContracts Condition="'$(BlazyComponentsExportContracts)' == ''">true</BlazyComponentsExportContracts>
+    <BlazyComponentsContractGeneratorAssembly>$(MSBuildThisFileDirectory)..\analyzers\dotnet\cs\RonSijm.Blazyload.Components.SourceGenerator.dll</BlazyComponentsContractGeneratorAssembly>
+    <BlazyComponentsContractsTaskAssembly>$(MSBuildThisFileDirectory)..\tools\net8.0\RonSijm.Blazyload.Components.SourceGenerator.Build.dll</BlazyComponentsContractsTaskAssembly>
+  </PropertyGroup>
+</Project>

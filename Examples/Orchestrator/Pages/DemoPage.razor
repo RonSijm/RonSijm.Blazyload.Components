@@ -1,0 +1,55 @@
+@page "/{Demo?}"
+
+<main data-testid="demo-outlet">
+    @switch (Demo?.ToLowerInvariant())
+    {
+        case null:
+            <PageTitle>Blazyload demo orchestrator</PageTitle>
+            <section class="orchestrator-intro">
+                <h1>This demo orchestrator is a demo in and of itself. It uses one Blazor runtime.</h1>
+                <p>Two domains supply their own demo components. This host loads the one you choose, without opening another Blazor application.</p>
+                <div class="orchestrator-choices">
+                    <article>
+                        <h2>Simple: Burger and Pizza</h2>
+                        <p>Composition with as few changes and dependencies as possible. Component names, parameters and callbacks. No source generator.</p>
+                        <code>&lt;BlazyComponent Name="burger.editor" /&gt;</code>
+                        <a href="Simple/" data-testid="open-simple">Open Simple demo</a>
+                    </article>
+                    <article>
+                        <h2>Extensive: Bob's Burgers and Wonder Wharf</h2>
+                        <p>A technical sales-style page with visible consumer and producer code, generated contracts, services, assets and loading steps.</p>
+                        <code>&lt;BlazyComponent Name="bobsburgers.dashboard" /&gt;</code>
+                        <a href="Extensive/" data-testid="open-extensive">Open Extensive demo</a>
+                    </article>
+                </div>
+                <h2>Watch what gets loaded</h2>
+                <p>Open DevTools (F12), select <strong>Network</strong>, disable caching and reload. Neither demo's implementation is downloaded yet. Choose a demo, then use its button to load Pizza or Wonder Wharf.</p>
+                <p>Switch demos using the navigation above. Blazor stays running; already-loaded assemblies aren't downloaded again. Switching creates a fresh demo component, so its form and selection state reset.</p>
+                <p>These .NET 10 assemblies are served as <code>.wasm</code> files, not <code>.dll</code> files. This host also defers each demo's model contracts; scoped styles can load at startup.</p>
+                <p><a href="https://github.com/RonSijm/RonSijm.Blazyload.Components/tree/main/Examples">Read the source and setup</a>.</p>
+            </section>
+            break;
+        case "simple":
+            <PageTitle>Simple demo - Blazyload</PageTitle>
+            <section class="orchestrator-simple">
+                <BlazyComponent Name="burger.editor" />
+            </section>
+            break;
+        case "extensive":
+            <PageTitle>Extensive demo - Blazyload</PageTitle>
+            <BlazyComponent Name="bobsburgers.dashboard" />
+            break;
+        default:
+            <PageTitle>Demo not found - Blazyload</PageTitle>
+            <section class="orchestrator-intro">
+                <h1>Demo not found</h1>
+                <p>Choose Simple or Extensive above.</p>
+            </section>
+            break;
+    }
+</main>
+
+@code {
+    [Parameter]
+    public string? Demo { get; set; }
+}

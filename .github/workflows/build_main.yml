@@ -1,0 +1,47 @@
+name: .NET and NuGet
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+      - name: Restore dependencies
+        run: dotnet restore RonSijm.Blazyload.Components.sln
+      - name: Build
+        run: dotnet build RonSijm.Blazyload.Components.sln -c Release --no-restore
+      - name: Test
+        run: dotnet test Tests/RonSijm.Blazyload.Components.Tests/RonSijm.Blazyload.Components.Tests.csproj -c Release --no-build
+      - name: Pack
+        run: |
+          dotnet pack src/RonSijm.Blazyload.Components/RonSijm.Blazyload.Components.csproj -c Release --no-build --no-restore
+          dotnet pack src/RonSijm.Blazyload.Components.SourceGenerator/RonSijm.Blazyload.Components.SourceGenerator.csproj -c Release --no-build --no-restore
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: packages/*
+          if-no-files-found: error
+      - name: Publish to NuGet
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push "packages/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate

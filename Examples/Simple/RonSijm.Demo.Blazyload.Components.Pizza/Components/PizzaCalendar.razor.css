@@ -1,0 +1,8 @@
+.pizza-calendar {
+    border: 3px solid rgb(180, 40, 20);
+    padding: 1rem;
+}
+
+.pizza-calendar img {
+    width: 48px;
+}

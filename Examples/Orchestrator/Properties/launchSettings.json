@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "RonSijm.Demo.Blazyload.Components.Orchestrator": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:16787;http://localhost:16788"
+    }
+  }
+}

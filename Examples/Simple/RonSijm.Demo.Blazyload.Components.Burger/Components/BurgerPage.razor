@@ -1,0 +1,50 @@
+@using Microsoft.AspNetCore.Components
+@using RonSijm.Blazyload.Components
+@using RonSijm.Demo.Blazyload.Components.Pizza.Contracts
+@attribute [BlazyComponent("burger.editor")]
+
+<h1>Burger editor</h1>
+<p>Simple demo: compose components by name, with minimal changes and dependencies. No source generator or generated contracts are needed.</p>
+<p>
+    Open your browser's developer tools (F12), select the <strong>Network</strong> tab, and filter for <code>Pizza</code> before clicking the button below.
+    Watch the Pizza assemblies (DLLs) and service dependency load on demand when you click <strong>Show pizza calendar</strong>.
+    This .NET 10 sample serves assemblies as <code>.wasm</code> files, sometimes with fingerprinted filenames.
+</p>
+<button data-testid="show-pizza" @onclick="ShowPizza">Show pizza calendar</button>
+<button data-testid="change-title" @onclick="ChangeTitle">Change calendar title</button>
+<p data-testid="selected-date">@_selectedDate</p>
+
+@if (_showPizza)
+{
+    <BlazyComponent Name="pizza.calendar" Parameters="@_parameters" />
+}
+
+@code {
+    private bool _showPizza;
+    private string? _selectedDate;
+    private Dictionary<string, object?> _parameters = [];
+
+    private void ShowPizza()
+    {
+        _parameters = new Dictionary<string, object?>
+        {
+            ["Title"] = "Pizza for burgers",
+            ["Model"] = new PizzaCalendarModel("Burger customer"),
+            ["DateSelected"] = EventCallback.Factory.Create<DateOnly>(this, HandleDateSelected)
+        };
+        _showPizza = true;
+    }
+
+    private void ChangeTitle()
+    {
+        _parameters = new Dictionary<string, object?>(_parameters)
+        {
+            ["Title"] = "Updated pizza calendar"
+        };
+    }
+
+    private void HandleDateSelected(DateOnly date)
+    {
+        _selectedDate = date.ToString("yyyy-MM-dd");
+    }
+}

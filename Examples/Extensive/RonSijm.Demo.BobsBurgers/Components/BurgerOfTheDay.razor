@@ -1,0 +1,15 @@
+@using RonSijm.Blazyload.Components
+@attribute [BlazyComponent("bobsburgers.burger-of-the-day")]
+
+<section class="burger-card" data-testid="burger-of-the-day">
+    <div class="burger-picture">
+        <img src="_content/RonSijm.Demo.BobsBurgers/burger.svg" alt="Bob's Burgers static asset" />
+    </div>
+    <div class="burger-copy">
+        <p class="special-label">Local component. Same assembly.</p>
+        <h3>BurgerOfTheDay</h3>
+        <pre><code>&lt;BurgerOfTheDay /&gt;</code></pre>
+        <p>Normal Razor rendering inside Bob's Burgers. This component arrived with RestaurantDashboard; rendering it doesn't trigger another assembly download.</p>
+        <p>The image is also a feature asset: <code>_content/RonSijm.Demo.BobsBurgers/burger.svg</code>. No separate image deployment needed.</p>
+    </div>
+</section>

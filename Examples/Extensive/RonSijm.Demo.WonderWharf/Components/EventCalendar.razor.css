@@ -1,0 +1,108 @@
+.event-calendar {
+    min-width: 0;
+    padding: 2rem;
+    border: 3px solid #b53a2b;
+    border-radius: 12px;
+    background: #fffdf7;
+    color: #29221e;
+    line-height: 1.7;
+}
+
+h2 {
+    margin-top: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.8rem;
+}
+
+.component-label {
+    margin-top: 0;
+    color: #b53a2b;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+code {
+    overflow-wrap: anywhere;
+}
+
+ul {
+    padding: 0;
+    list-style: none;
+}
+
+li {
+    padding-block: 1rem;
+    border-bottom: 1px solid #e5d7be;
+    font-weight: 600;
+}
+
+.calendar-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-block: 1.5rem;
+}
+
+.event-calendar img {
+    width: 48px;
+}
+
+button {
+    padding: 0.8rem 1rem;
+    border: 0;
+    border-radius: 6px;
+    background: #b53a2b;
+    color: white;
+    font-weight: 700;
+}
+
+button:hover {
+    background: #8a2b21;
+}
+
+.producer-notes {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5d7be;
+    font-size: 0.85rem;
+    line-height: 1.7;
+}
+
+.producer-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+.producer-layout > div {
+    min-width: 0;
+}
+
+.asset-result {
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    background: #f1e5cf;
+    font-weight: 600;
+}
+
+pre {
+    max-width: 100%;
+    padding: 1rem;
+    border-radius: 6px;
+    background: #29221e;
+    color: #fff4dc;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+    .event-calendar {
+        padding: 1.2rem;
+    }
+
+    .producer-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

@@ -1,0 +1,279 @@
+@using Microsoft.AspNetCore.Components
+@using RonSijm.Blazyload.Components
+@using RonSijm.Demo.WonderWharf.Contracts
+@attribute [BlazyComponent("bobsburgers.dashboard")]
+
+<div class="storefront" data-testid="burger-storefront">
+    <a class="skip-link" href="#compose">Skip to the component demo</a>
+    <div class="announcement">Independent domains. One Blazor runtime. Components served on demand.</div>
+    <header class="site-header">
+        <a class="wordmark" href="#top" aria-label="Bob's Burgers component demo">BOB'S<br />BURGERS<span>COMPONENT EDITION</span></a>
+        <nav aria-label="Main navigation">
+            <a href="#compose">Live composition</a>
+            <a href="#boundary">References</a>
+            <a href="#tooling">Extra tooling</a>
+        </nav>
+        <a class="button header-button" href="#demo">Watch the downloads</a>
+    </header>
+
+    <main id="top">
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-copy">
+                <p class="eyebrow">The special today: component composition</p>
+                <h1 id="hero-title">Compose first.<br /> Download later.</h1>
+                <p class="hero-description">Bob's Burgers wants Wonder Wharf's calendar, not a dependency on its UI implementation. Ask by name. Let Blazyload bring the component and its services to the table.</p>
+                <div class="hero-actions">
+                    <button class="button" data-testid="show-events" @onclick="ShowEvents">Load Wonder Wharf component</button>
+                    <a class="text-link" href="#compose">See the component outlet</a>
+                </div>
+                <p class="load-status" data-testid="demo-status" role="status">
+                    @if (_showEvents)
+                    {
+                        <span><code>wonderwharf.events</code> has been requested by this dashboard. The calendar renders after assembly loading and service registration.</span>
+                    }
+                    else
+                    {
+                        <span>No calendar requested by this dashboard yet. The first request downloads the implementation and services; later requests reuse them.</span>
+                    }
+                </p>
+            </div>
+            <aside class="request-card" aria-label="The consumer's request">
+                <p class="eyebrow">Your order, in Razor</p>
+                <h2>RestaurantDashboard</h2>
+                <pre><code data-testid="restaurant-consumer-code">@ConsumerCode</code></pre>
+                <p><code>WonderWharfComponents.Events</code> is a generated constant for <code>"wonderwharf.events"</code>. No <code>EventCalendar</code> type reference in the consumer.</p>
+                <p><a class="text-link" href="#tooling">What does Extensive add over Simple?</a></p>
+                <p class="component-label">Entry component: <code>bobsburgers.dashboard</code></p>
+            </aside>
+        </section>
+
+        <div class="good-stuff" aria-label="What component composition gives you">
+            <span>Contracts, not an implementation reference</span>
+            <span>Normal Blazor parameters and callbacks</span>
+            <span>Load once. Render again.</span>
+        </div>
+
+        <section id="compose" class="wharf-section" aria-labelledby="compose-title">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">The live composition</p>
+                    <h2 id="compose-title">Request it. Watch it arrive.</h2>
+                </div>
+                <p>This outlet belongs to Bob's Burgers. The component rendered inside it belongs to Wonder Wharf.</p>
+            </div>
+            <ol class="loading-steps" data-testid="loading-steps">
+                <li><strong>Look up the name</strong><span><code>blazy-components.json</code> maps the name to its assembly and type.</span></li>
+                <li><strong>Load the feature</strong><span>Blazyload loads <code>WonderWharf</code> and <code>WonderWharf.Services</code>, then runs bootstrap registration.</span></li>
+                <li><strong>Render with Blazor</strong><span>Components passes the resolved type and parameters to <code>DynamicComponent</code>.</span></li>
+            </ol>
+            <div class="wharf-actions">
+                <button class="button button-secondary" data-testid="change-title" @onclick="ChangeTitle" disabled="@(!_showEvents)">Update Title parameter</button>
+                <p>Updates the existing calendar. No second assembly download.</p>
+            </div>
+            <p class="callback-result"><code>DateSelected</code> callback result: <strong data-testid="selected-date">@(_selectedDate ?? "No callback received yet.")</strong></p>
+
+            @if (_showEvents)
+            {
+                <BlazyComponent Name="@WonderWharfComponents.Events" Parameters="@_parameters" />
+            }
+            else
+            {
+                <div class="wharf-placeholder" data-testid="component-placeholder">
+                    <span class="placeholder-label">Component outlet: not mounted yet</span>
+                    <h3>Your calendar is one request away.</h3>
+                    <p>Click <strong>Load Wonder Wharf component</strong> above. <code>EventCalendar</code> will render here with its injected event service and local <code>RideSchedule</code> component.</p>
+                </div>
+            }
+        </section>
+
+        <section id="boundary" class="boundary-section" aria-labelledby="boundary-title" data-testid="reference-boundary">
+            <div>
+                <p class="eyebrow">Keep your domains independent</p>
+                <h2 id="boundary-title">Keep the contract.<br />Skip the UI dependency.</h2>
+                <p>Bob's Burgers only references Components and WonderWharf.Contracts. Generated names and the shared model cross the boundary; the calendar implementation doesn't.</p>
+                <p>The host still includes both feature libraries for deployment. Avoiding the consumer's UI reference doesn't mean shipping a missing assembly.</p>
+            </div>
+            <dl class="reference-info">
+                <div><dt>Consumer: Bob's Burgers</dt><dd><code>Components + WonderWharf.Contracts</code></dd></div>
+                <div><dt>Producer: Wonder Wharf</dt><dd><code>EventCalendar + RideSchedule + feature bootstrap</code></dd></div>
+                <div><dt>Deployment host</dt><dd>Publishes both domains, the catalog and static assets. Marks implementation assemblies lazy.</dd></div>
+            </dl>
+        </section>
+
+        <section id="tooling" class="tooling-section" aria-labelledby="tooling-title" data-testid="demo-tooling">
+            <p class="eyebrow">Simple composition, with an optional upgrade</p>
+            <h2 id="tooling-title">More build-time help.<br />Less contract housekeeping.</h2>
+            <p>Simple already composes independent features. Extensive adds generated component names and exported data contracts, so the producer can own its shared API without maintaining a separate contracts project.</p>
+            <div class="tooling-grid" data-testid="demo-comparison">
+                <article class="tooling-card">
+                    <h3>Simple: keep it manual</h3>
+                    <pre><code data-testid="simple-composition-code">@SimpleCompositionCode</code></pre>
+                    <dl class="reference-info">
+                        <div><dt>Component names</dt><dd>A string literal: <code>"pizza.calendar"</code>. No generated identifier.</dd></div>
+                        <div><dt>Shared data</dt><dd>A handwritten <code>PizzaCalendarModel</code> in a separate <code>Pizza.Contracts</code> project.</dd></div>
+                        <div><dt>Consumer reference</dt><dd>Burger uses an ordinary <code>ProjectReference</code> to that contracts project, not Pizza's implementation.</dd></div>
+                    </dl>
+                    <p>No source-generator package. If you only pass primitive values and callbacks, you don't need a model contracts project either.</p>
+                </article>
+                <article class="tooling-card">
+                    <h3>Extensive: export it at build time</h3>
+                    <pre><code data-testid="extensive-composition-code">@ExtensiveCompositionCode</code></pre>
+                    <dl class="reference-info">
+                        <div><dt>Component names</dt><dd>The generator produces <code>WonderWharfComponents.Events</code> from <code>[BlazyComponent("wonderwharf.events")]</code>.</dd></div>
+                        <div><dt>Shared data</dt><dd><code>[BlazyContract]</code> marks <code>EventCalendarModel</code> in Wonder Wharf's source. The tooling builds <code>WonderWharf.Contracts.dll</code>.</dd></div>
+                        <div><dt>Consumer reference</dt><dd><code>BlazyComponentContractReference</code> references the generated contracts without adding Wonder Wharf's UI or services.</dd></div>
+                    </dl>
+                    <p>More build tooling, fewer handwritten contracts. No new runtime rendering API: <code>Name</code> still receives a string.</p>
+                </article>
+            </div>
+
+            <div class="shared-runtime" data-testid="shared-demo-runtime">
+                <h3>The runtime isn't the upgrade</h3>
+                <p>Both demos use <code>RonSijm.Blazyload</code> to download assemblies, load dependencies and run service bootstrap. Both use <code>RonSijm.Blazyload.Components</code> to resolve names and render ordinary Blazor parameters and callbacks.</p>
+                <p>The Components package's <code>RonSijm.Blazyload.Components.Build</code> tooling generates the host's <code>blazy-components.json</code> catalog and trimming rules in both demos. That catalog is not the generated data-contract assembly.</p>
+                <p>Simple also demonstrates DI services, images, JavaScript and scoped CSS. Those features don't require the source generator; they aren't exclusive to Extensive.</p>
+            </div>
+
+            <h3>The extra package: <code>RonSijm.Blazyload.Components.SourceGenerator</code></h3>
+            <p>Build-time only. The package combines a Roslyn source generator with an MSBuild exporter. It doesn't run in the browser, and the browser doesn't download its tooling assemblies. The generated contracts DLL is a runtime dependency, not a tooling DLL.</p>
+            <ol class="loading-steps contracts-steps" data-testid="contracts-pipeline">
+                <li><strong>Keep source in the producer</strong><span>Declare the component's stable name and mark shared models with <code>[BlazyContract]</code>. Only explicitly marked models are exported.</span></li>
+                <li><strong>Build the contracts</strong><span>The generator emits name constants. The MSBuild exporter compiles them and the marked models into <code>RonSijm.Demo.WonderWharf.Contracts.dll</code>.</span></li>
+                <li><strong>Share one model type</strong><span>The model source stays in Wonder Wharf. Its compiled definition lives only in contracts; the producer forwards the type rather than compiling a second copy.</span></li>
+                <li><strong>Reference just the contract</strong><span>Bob's Burgers receives the constants and model, not <code>EventCalendar</code> or <code>WharfEventService</code>. The host still publishes the implementation.</span></li>
+            </ol>
+            <div class="tooling-grid">
+                <article class="tooling-card">
+                    <h3>You maintain the producer source</h3>
+                    <p>The component declares its name:</p>
+                    <pre><code>@ComponentAttributeCode</code></pre>
+                    <p>The shared model stays in Wonder Wharf's project:</p>
+                    <pre><code data-testid="contract-source-code">@ContractSourceCode</code></pre>
+                </article>
+                <article class="tooling-card">
+                    <h3>The build supplies the shared API</h3>
+                    <p>Types exposed by the generated contracts assembly:</p>
+                    <pre><code data-testid="generated-contract-code">@GeneratedContractCode</code></pre>
+                </article>
+            </div>
+            <p>A source generator alone cannot remove a model's original declaration. The MSBuild exporter handles that compilation change without editing your source files. Both domains then use the same CLR type.</p>
+            <p>In this source-tree demo, Bob's Burgers uses:</p>
+            <pre><code data-testid="contracts-reference-code">@ContractsReferenceCode</code></pre>
+            <p>For a packable producer, <code>dotnet pack</code> also creates a companion <code>.Contracts</code> NuGet package; consumers install that instead of referencing the UI package. These demo projects aren't packable.</p>
+            <p>Generated members are checked by the C# compiler. Parameter dictionary names and types are still checked by Blazor at runtime. Choose Simple if string names and a small shared model are enough; choose this tooling when maintaining names and contracts by hand becomes the annoying part.</p>
+        </section>
+
+        <section class="parameters-section" aria-labelledby="parameters-title">
+            <p class="eyebrow">Parameters included. Callbacks too.</p>
+            <h2 id="parameters-title">Your data goes in.<br />A normal callback comes back.</h2>
+            <pre><code data-testid="restaurant-parameter-code">@ParameterCode</code></pre>
+            <p><code>Title</code> is a string. <code>Model</code> is a generated shared contract. <code>DateSelected</code> is an ordinary <code>EventCallback&lt;DateOnly&gt;</code> handled by this dashboard.</p>
+            <p>Use <strong>Send DateSelected callback</strong> inside the calendar to update the result above. Use <strong>Update Title parameter</strong> to replace the parameter dictionary. Names and types are checked at runtime, not by the consumer's Razor compiler.</p>
+        </section>
+
+        <section id="local" class="local-section" aria-labelledby="local-title">
+            <p class="eyebrow">Already in the same domain?</p>
+            <h2 id="local-title">Plain Razor. No extra ceremony.</h2>
+            <p>The dashboard renders its own <code>BurgerOfTheDay</code> component normally. Both live in Bob's Burgers, so no cross-domain lookup is needed.</p>
+            <BurgerOfTheDay />
+        </section>
+
+        <section id="demo" class="developer-notes developer-content" data-testid="demo-explanation" aria-labelledby="demo-title">
+            <p class="eyebrow">Your DevTools receipt</p>
+            <h2 id="demo-title">Nothing hidden. Check the Network tab.</h2>
+            <p>Open DevTools (F12), select <strong>Network</strong>, enable <strong>Disable cache</strong> and reload. Filter for <code>WonderWharf</code>, then click <strong>Load Wonder Wharf component</strong>.</p>
+            <p><code>WonderWharf</code> and <code>WonderWharf.Services</code> arrive on the first request. The DLL assemblies are served as <code>.wasm</code> files in .NET 10, often with fingerprints. Updating parameters or invoking a callback doesn't download them again.</p>
+            <p><code>WonderWharf.Contracts</code> is needed by this dashboard's model. It loads when you choose Extensive in the orchestrator, or at startup in the standalone host. Scoped CSS can load before its component; that isn't an implementation download.</p>
+            <p>The feature code is deliberately small and ugly. The sales-site styling sells the composition, not an actual burger. <a href="https://github.com/RonSijm/RonSijm.Blazyload.Components/tree/main/Examples/Extensive">Read the example source</a>.</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div><strong>BOB'S BURGERS</strong><p>Independent UI, served on demand.</p></div>
+        <p>A Blazyload Components demo.<br /><a href="#compose">Back to the live composition</a></p>
+    </footer>
+</div>
+
+@code {
+    private const string SimpleCompositionCode = """
+        <BlazyComponent Name="pizza.calendar" Parameters="@_parameters" />
+        """;
+
+    private const string ExtensiveCompositionCode = """
+        <BlazyComponent Name="@WonderWharfComponents.Events" Parameters="@_parameters" />
+        """;
+
+    private const string ComponentAttributeCode = """
+        @attribute [BlazyComponent("wonderwharf.events")]
+        """;
+
+    private const string ContractSourceCode = """
+        using RonSijm.Blazyload.Components;
+
+        namespace RonSijm.Demo.WonderWharf.Contracts;
+
+        [BlazyContract]
+        public sealed record EventCalendarModel(string RestaurantName);
+        """;
+
+    private const string GeneratedContractCode = """
+        namespace RonSijm.Demo.WonderWharf.Contracts;
+
+        public static class WonderWharfComponents
+        {
+            public const string Events = "wonderwharf.events";
+            public const string Rides = "wonderwharf.rides";
+        }
+
+        public sealed record EventCalendarModel(string RestaurantName);
+        """;
+
+    private const string ContractsReferenceCode = """
+        <BlazyComponentContractReference Include="..\RonSijm.Demo.WonderWharf\RonSijm.Demo.WonderWharf.csproj" />
+        """;
+
+    private const string ConsumerCode = """
+        @if (_showEvents)
+        {
+            <BlazyComponent Name="@WonderWharfComponents.Events" Parameters="@_parameters" />
+        }
+        """;
+
+    private const string ParameterCode = """
+        _parameters = new Dictionary<string, object?>
+        {
+            ["Title"] = "Upcoming Wonder Wharf events",
+            ["Model"] = new EventCalendarModel("Bob's Burgers"),
+            ["DateSelected"] = EventCallback.Factory.Create<DateOnly>(this, HandleDateSelected)
+        };
+        _showEvents = true;
+        """;
+
+    private bool _showEvents;
+    private string? _selectedDate;
+    private Dictionary<string, object?> _parameters = [];
+
+    private void ShowEvents()
+    {
+        _parameters = new Dictionary<string, object?>
+        {
+            ["Title"] = "Upcoming Wonder Wharf events",
+            ["Model"] = new EventCalendarModel("Bob's Burgers"),
+            ["DateSelected"] = EventCallback.Factory.Create<DateOnly>(this, HandleDateSelected)
+        };
+        _showEvents = true;
+    }
+
+    private void ChangeTitle()
+    {
+        _parameters = new Dictionary<string, object?>(_parameters)
+        {
+            ["Title"] = "Wonder Wharf events for the restaurant team"
+        };
+    }
+
+    private void HandleDateSelected(DateOnly date)
+    {
+        _selectedDate = date.ToString("yyyy-MM-dd");
+    }
+}

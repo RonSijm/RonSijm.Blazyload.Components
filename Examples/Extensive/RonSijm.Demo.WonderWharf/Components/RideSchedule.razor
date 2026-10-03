@@ -1,0 +1,8 @@
+@using RonSijm.Blazyload.Components
+@attribute [BlazyComponent("wonderwharf.rides")]
+
+<section class="ride-schedule" data-testid="ride-schedule">
+    <h3>RideSchedule: local rendering inside Wonder Wharf</h3>
+    <pre><code>&lt;RideSchedule /&gt;</code></pre>
+    <p>EventCalendar renders this component directly. Both are in <code>RonSijm.Demo.WonderWharf</code>, which is already loaded. No additional assembly request and no cross-domain lookup.</p>
+</section>

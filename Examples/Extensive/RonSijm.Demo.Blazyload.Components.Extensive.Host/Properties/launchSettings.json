@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "RonSijm.Demo.Blazyload.Components.Extensive.Host": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:16783;http://localhost:16784"
+    }
+  }
+}

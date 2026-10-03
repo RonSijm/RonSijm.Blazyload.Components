@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <Import Project="..\..\BuildSettings\SupportedFrameworks.props" />
+  <Import Project="..\..\BuildSettings\NuGetVersioning.props" />
+  <PropertyGroup>
+    <Title>RonSijm.Blazyload.Components</Title>
+    <Description>Resolve and lazily render Blazor components by stable logical names using Blazyload.</Description>
+    <PackageProjectUrl>https://github.com/RonSijm/RonSijm.Blazyload.Components</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/RonSijm/RonSijm.Blazyload.Components</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RonSijm.Blazyload" Version="2.0.1" />
+    <ProjectReference Include="..\RonSijm.Blazyload.Components.Build\RonSijm.Blazyload.Components.Build.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="buildTransitive\RonSijm.Blazyload.Components.targets" Pack="true" PackagePath="buildTransitive" />
+    <None Include="..\RonSijm.Blazyload.Components.Build\bin\$(Configuration)\net8.0\RonSijm.Blazyload.Components.Build.dll" Pack="true" PackagePath="tools\net8.0" />
+  </ItemGroup>
+</Project>

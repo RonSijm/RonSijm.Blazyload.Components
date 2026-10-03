@@ -1,0 +1,75 @@
+.burger-card {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid #e5d7be;
+    border-radius: 12px;
+    background: #fffdf7;
+}
+
+.burger-picture {
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: #f3dcae;
+}
+
+.burger-picture img {
+    display: block;
+    width: 100%;
+    max-width: 6rem;
+}
+
+.burger-copy {
+    align-self: center;
+    min-width: 0;
+    padding: 1.5rem;
+}
+
+.special-label {
+    color: #b53a2b;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+h3 {
+    margin: 0 0 1rem;
+    color: #29221e;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2rem;
+    letter-spacing: -0.04em;
+}
+
+.burger-copy > p:not(.special-label) {
+    color: #6c6055;
+    line-height: 1.7;
+}
+
+code {
+    overflow-wrap: anywhere;
+}
+
+pre {
+    padding: 1rem;
+    border-radius: 6px;
+    background: #29221e;
+    color: #fff4dc;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 600px) {
+    .burger-card {
+        grid-template-columns: 1fr;
+    }
+
+    .burger-copy {
+        padding: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.6rem;
+        overflow-wrap: anywhere;
+    }
+}

@@ -1,0 +1,109 @@
+<Project>
+  <PropertyGroup>
+    <BlazyComponentsContractsNamespace Condition="'$(BlazyComponentsContractsNamespace)' == ''">$(RootNamespace).Contracts</BlazyComponentsContractsNamespace>
+    <BlazyComponentsContractsClassName Condition="'$(BlazyComponentsContractsClassName)' == ''">$([System.IO.Path]::GetExtension('$(AssemblyName)').TrimStart('.'))Components</BlazyComponentsContractsClassName>
+    <BlazyComponentsContractsClassName Condition="'$(BlazyComponentsContractsClassName)' == 'Components'">$(AssemblyName)Components</BlazyComponentsContractsClassName>
+    <BlazyComponentsContractsPackageId Condition="'$(BlazyComponentsContractsPackageId)' == '' and '$(PackageId)' != ''">$(PackageId).Contracts</BlazyComponentsContractsPackageId>
+    <BlazyComponentsContractsPackageId Condition="'$(BlazyComponentsContractsPackageId)' == ''">$(AssemblyName).Contracts</BlazyComponentsContractsPackageId>
+    <_BlazyContractsDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'blazy-contracts'))</_BlazyContractsDirectory>
+    <_BlazyContractsProject>$(_BlazyContractsDirectory)$(AssemblyName).Contracts.csproj</_BlazyContractsProject>
+    <TargetsForTfmSpecificBuildOutput Condition="'$(BlazyComponentsExportContracts)' == 'true'">$(TargetsForTfmSpecificBuildOutput);IncludeBlazyContractsBuildOutput</TargetsForTfmSpecificBuildOutput>
+    <_BlazyContractsTaskRuntime>CurrentRuntime</_BlazyContractsTaskRuntime>
+    <_BlazyContractsTaskRuntime Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(MSBuildVersion)', '18.0'))">NET</_BlazyContractsTaskRuntime>
+  </PropertyGroup>
+
+  <UsingTask TaskName="RonSijm.Blazyload.Components.SourceGenerator.Build.PrepareContractProject" AssemblyFile="$(BlazyComponentsContractsTaskAssembly)" Runtime="$(_BlazyContractsTaskRuntime)" Architecture="CurrentArchitecture" />
+  <UsingTask TaskName="RonSijm.Blazyload.Components.SourceGenerator.Build.PrepareContractsPackage" AssemblyFile="$(BlazyComponentsContractsTaskAssembly)" Runtime="$(_BlazyContractsTaskRuntime)" Architecture="CurrentArchitecture" />
+
+  <Target Name="PrepareBlazyComponentContracts" Condition="'$(BlazyComponentsExportContracts)' == 'true' and '$(TargetFramework)' != ''">
+    <ItemGroup>
+      <_BlazyContractRazorSources Include="@(RazorComponent);@(Content)" Condition="'%(Extension)' == '.razor'" />
+      <_BlazyContractPackages Include="@(PackageReference)" Condition="'%(PackageReference.BlazyContract)' == 'true'" />
+      <_BlazyContractProjects Include="@(ProjectReference)" Condition="'%(ProjectReference.BlazyContract)' == 'true'" />
+    </ItemGroup>
+    <PrepareContractProject Sources="@(Compile)" RazorSources="@(_BlazyContractRazorSources)" OutputDirectory="$(_BlazyContractsDirectory)" ProducerAssemblyName="$(AssemblyName)" TargetFramework="$(TargetFramework)" GeneratorAssembly="$(BlazyComponentsContractGeneratorAssembly)" ContractsNamespace="$(BlazyComponentsContractsNamespace)" ContractsClassName="$(BlazyComponentsContractsClassName)" PackageId="$(BlazyComponentsContractsPackageId)" Version="$(Version)" PackageOutputPath="$(PackageOutputPath)" DefineConstants="$(DefineConstants)" PackageReferences="@(_BlazyContractPackages)" ProjectReferences="@(_BlazyContractProjects)">
+      <Output TaskParameter="ContractsProject" PropertyName="_BlazyContractsProject" />
+      <Output TaskParameter="RemovedSources" ItemName="_BlazyContractsRemovedSources" />
+      <Output TaskParameter="ReplacementSources" ItemName="_BlazyContractsReplacementSources" />
+      <Output TaskParameter="WrittenFiles" ItemName="FileWrites" />
+    </PrepareContractProject>
+  </Target>
+
+  <Target Name="BuildBlazyComponentContracts" BeforeTargets="ResolveProjectReferences" DependsOnTargets="PrepareBlazyComponentContracts" Condition="'$(BlazyComponentsExportContracts)' == 'true' and '$(TargetFramework)' != ''">
+    <MSBuild Projects="$(_BlazyContractsProject)" Targets="Restore" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework);ImportDirectoryBuildProps=false;ImportDirectoryBuildTargets=false;BuildProjectReferences=true" RemoveProperties="TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;IsTrimmable;IsAotCompatible;NoBuild;DesignTimeBuild;GeneratePackageOnBuild" />
+    <MSBuild Projects="$(_BlazyContractsProject)" Targets="Build" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework);ImportDirectoryBuildProps=false;ImportDirectoryBuildTargets=false;BuildProjectReferences=true" RemoveProperties="TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;IsTrimmable;IsAotCompatible;NoBuild;DesignTimeBuild;GeneratePackageOnBuild">
+      <Output TaskParameter="TargetOutputs" ItemName="_BlazyContractsBuiltAssembly" />
+    </MSBuild>
+    <MSBuild Projects="$(_BlazyContractsProject)" Targets="GetBlazyContractDependencies" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework);ImportDirectoryBuildProps=false;ImportDirectoryBuildTargets=false;BuildProjectReferences=true" RemoveProperties="TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;IsTrimmable;IsAotCompatible;NoBuild;DesignTimeBuild;GeneratePackageOnBuild">
+      <Output TaskParameter="TargetOutputs" ItemName="_BlazyContractsDependencies" />
+    </MSBuild>
+    <ItemGroup>
+      <Compile Remove="@(_BlazyContractsRemovedSources)" />
+      <Compile Include="@(_BlazyContractsReplacementSources)" />
+      <Reference Include="$(AssemblyName).Contracts">
+        <HintPath>@(_BlazyContractsBuiltAssembly)</HintPath>
+        <Private>true</Private>
+      </Reference>
+      <Reference Include="@(_BlazyContractsDependencies)">
+        <Private>true</Private>
+      </Reference>
+      <_BlazyContractsBuiltAssembly>
+        <TargetFramework>$(TargetFramework)</TargetFramework>
+        <ContractsProject>$(_BlazyContractsProject)</ContractsProject>
+        <BlazyContractAssembly>true</BlazyContractAssembly>
+      </_BlazyContractsBuiltAssembly>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="GetBlazyComponentContracts" DependsOnTargets="BuildBlazyComponentContracts" Returns="@(_BlazyContractsBuiltAssembly);@(_BlazyContractsDependencies)">
+    <Error Condition="'$(BlazyComponentsExportContracts)' != 'true'" Text="BLZCON006: This project must enable BlazyComponentsExportContracts to provide a contracts-only reference." />
+    <Error Condition="'@(_BlazyContractsBuiltAssembly)' == ''" Text="BLZCON010: No contracts assembly was built. Select a compatible producer target framework." />
+  </Target>
+
+  <Target Name="ResolveBlazyComponentContractReferences" BeforeTargets="ResolveProjectReferences" Condition="'@(BlazyComponentContractReference)' != ''">
+    <MSBuild Projects="@(BlazyComponentContractReference)" Targets="Restore" Properties="Configuration=$(Configuration);_BlazyContractsRestoreOnly=true" RemoveProperties="TargetFramework;TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;DesignTimeBuild" />
+    <MSBuild Projects="@(BlazyComponentContractReference)" Targets="GetTargetFrameworks" Properties="Configuration=$(Configuration)" RemoveProperties="TargetFramework;TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;DesignTimeBuild">
+      <Output TaskParameter="TargetOutputs" ItemName="_BlazyContractsFrameworks" />
+    </MSBuild>
+    <GetReferenceNearestTargetFrameworkTask AnnotatedProjectReferences="@(_BlazyContractsFrameworks)" CurrentProjectTargetFramework="$(TargetFrameworkMoniker)" CurrentProjectTargetPlatform="$(TargetPlatformMoniker)" CurrentProjectName="$(MSBuildProjectName)">
+      <Output TaskParameter="AssignedProjects" ItemName="_BlazyContractsProjects" />
+    </GetReferenceNearestTargetFrameworkTask>
+    <ItemGroup>
+      <_BlazyContractsProjects>
+        <AdditionalProperties>TargetFramework=%(NearestTargetFramework)</AdditionalProperties>
+      </_BlazyContractsProjects>
+    </ItemGroup>
+    <MSBuild Projects="@(_BlazyContractsProjects)" Targets="GetBlazyComponentContracts" Properties="Configuration=$(Configuration)" RemoveProperties="TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;DesignTimeBuild">
+      <Output TaskParameter="TargetOutputs" ItemName="_BlazyReferencedContracts" />
+    </MSBuild>
+    <ItemGroup>
+      <Reference Include="@(_BlazyReferencedContracts)">
+        <Private>true</Private>
+      </Reference>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="IncludeBlazyContractsBuildOutput" DependsOnTargets="BuildBlazyComponentContracts">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(_BlazyContractsBuiltAssembly)">
+        <FinalOutputPath>%(Identity)</FinalOutputPath>
+      </BuildOutputInPackage>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="PackBlazyComponentContracts" AfterTargets="Pack" Condition="'$(BlazyComponentsExportContracts)' == 'true' and '$(IsPackable)' != 'false' and '$(IsInnerBuild)' != 'true'">
+    <ItemGroup>
+      <_BlazyPackFramework Include="$(TargetFrameworks)" Condition="'$(TargetFrameworks)' != ''" />
+      <_BlazyPackFramework Include="$(TargetFramework)" Condition="'$(TargetFrameworks)' == ''" />
+      <_BlazyPackProject Include="$(MSBuildProjectFullPath)" AdditionalProperties="TargetFramework=%(_BlazyPackFramework.Identity)" />
+    </ItemGroup>
+    <MSBuild Projects="@(_BlazyPackProject)" Targets="GetBlazyComponentContracts" Properties="Configuration=$(Configuration)" RemoveProperties="RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;NoBuild">
+      <Output TaskParameter="TargetOutputs" ItemName="_BlazyContractsPackageAssemblies" />
+    </MSBuild>
+    <PrepareContractsPackage Assemblies="@(_BlazyContractsPackageAssemblies->WithMetadataValue('BlazyContractAssembly', 'true'))" OutputDirectory="$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(BaseIntermediateOutputPath)', 'blazy-contracts-package'))" PackageId="$(BlazyComponentsContractsPackageId)" Version="$(PackageVersion)" Authors="$(Authors)" PackageOutputPath="$(PackageOutputPath)">
+      <Output TaskParameter="ProjectPath" PropertyName="_BlazyContractsPackageProject" />
+      <Output TaskParameter="WrittenFiles" ItemName="FileWrites" />
+    </PrepareContractsPackage>
+    <MSBuild Projects="$(_BlazyContractsPackageProject)" Targets="Restore;Pack" Properties="Configuration=$(Configuration);ImportDirectoryBuildProps=false;ImportDirectoryBuildTargets=false;NoBuild=true" RemoveProperties="TargetFramework;TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;GeneratePackageOnBuild" />
+  </Target>
+</Project>

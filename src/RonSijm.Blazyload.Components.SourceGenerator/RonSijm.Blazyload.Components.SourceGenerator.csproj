@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\BuildSettings\NuGetVersioning.props" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeSymbols>false</IncludeSymbols>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <Authors>Ron Sijm</Authors>
+    <Title>RonSijm.Blazyload.Components.SourceGenerator</Title>
+    <Description>Generate component identifiers and automatically export shared models into companion contracts assemblies and NuGet packages.</Description>
+    <PackageProjectUrl>https://github.com/RonSijm/RonSijm.Blazyload.Components</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/RonSijm/RonSijm.Blazyload.Components</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+    <ProjectReference Include="..\RonSijm.Blazyload.Components.SourceGenerator.Build\RonSijm.Blazyload.Components.SourceGenerator.Build.csproj" ReferenceOutputAssembly="false" PrivateAssets="all" SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="TargetFramework" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers\dotnet\cs" />
+    <None Include="build\*" Pack="true" PackagePath="build;buildMultiTargeting" />
+  </ItemGroup>
+  <Target Name="IncludeContractsBuildTools" BeforeTargets="_GetPackageFiles">
+    <ItemGroup>
+      <None Include="..\RonSijm.Blazyload.Components.SourceGenerator.Build\bin\$(Configuration)\net8.0\*.dll" Pack="true" PackagePath="tools\net8.0" />
+    </ItemGroup>
+  </Target>
+</Project>

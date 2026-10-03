@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480">
+  <defs>
+    <linearGradient id="bun" x2="0" y2="1">
+      <stop stop-color="#f6c76c"/>
+      <stop offset="1" stop-color="#d4892f"/>
+    </linearGradient>
+    <linearGradient id="patty" x2="0" y2="1">
+      <stop stop-color="#79422a"/>
+      <stop offset="1" stop-color="#3e2119"/>
+    </linearGradient>
+    <linearGradient id="bottom" x2="0" y2="1">
+      <stop stop-color="#eab65a"/>
+      <stop offset="1" stop-color="#c9812c"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="320" cy="417" rx="228" ry="26" fill="#4b2a1b" opacity=".14"/>
+  <path d="M100 352H540L522 392Q320 442 118 392Z" fill="url(#bottom)"/>
+  <path d="M100 351Q320 370 540 351" fill="none" stroke="#f8d487" stroke-width="17" stroke-linecap="round"/>
+  <path d="M93 310Q112 292 137 303L499 300Q541 296 548 318L537 347Q320 374 103 348Z" fill="url(#patty)"/>
+  <path d="M125 318L182 331M217 316L260 333M306 316L348 335M397 314L448 332M486 313L512 327" fill="none" stroke="#a66942" stroke-width="5" opacity=".65"/>
+  <path d="M101 293L164 288L190 318L257 291L326 320L393 291L451 316L535 290L531 308L112 318Z" fill="#f6c33f"/>
+  <path d="M105 268Q320 246 533 268L531 291Q321 311 108 293Z" fill="#c64532"/>
+  <path d="M121 267Q320 252 516 268" fill="none" stroke="#e96846" stroke-width="8"/>
+  <path d="M88 249Q102 224 129 239Q151 214 176 237Q206 220 230 239Q252 213 279 237Q308 216 333 240Q361 217 389 239Q416 215 441 237Q470 217 491 238Q525 220 553 247L539 267Q517 251 493 267Q466 249 439 269Q410 250 387 269Q358 250 332 269Q305 251 278 269Q253 249 228 267Q203 251 176 268Q151 250 125 265L96 264Z" fill="#649344"/>
+  <path d="M122 243Q322 221 518 245" fill="none" stroke="#8ab553" stroke-width="8"/>
+  <path d="M100 225Q103 134 179 89Q319 22 461 91Q532 133 541 225Q322 260 100 225Z" fill="url(#bun)"/>
+  <path d="M116 214Q325 243 524 215" fill="none" stroke="#b96e26" stroke-width="9" stroke-linecap="round"/>
+  <path d="M165 143L178 137M211 104L224 101M259 133L272 127M302 87L315 84M343 118L356 122M387 83L399 87M436 135L449 141M475 166L486 173M209 179L222 174M310 176L324 176M387 176L400 181M149 189L162 185" fill="none" stroke="#ffedb8" stroke-width="7" stroke-linecap="round"/>
+</svg>

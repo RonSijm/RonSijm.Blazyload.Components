@@ -1,0 +1,74 @@
+name: GitHub Pages demo orchestrator
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: components-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+      - name: Install .NET WASM Build Tools
+        run: dotnet workload install wasm-tools
+      - name: Publish demo orchestrator
+        run: dotnet publish Examples/Orchestrator/RonSijm.Demo.Blazyload.Components.Orchestrator.csproj -c Release -p:GHPages=true -o dist/Orchestrator --nologo
+      - name: Build browser tests
+        run: dotnet build Tests/RonSijm.Blazyload.Components.IntegrationTests/RonSijm.Blazyload.Components.IntegrationTests.csproj -c Release
+      - name: Install browser
+        run: pwsh Tests/RonSijm.Blazyload.Components.IntegrationTests/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+      - name: Verify demos share one runtime
+        env:
+          BLAZY_COMPONENTS_PUBLISH_ROOT: ${{ github.workspace }}/dist/Orchestrator/wwwroot
+          BLAZY_COMPONENTS_BROWSER_CHANNEL: chromium
+          BLAZY_COMPONENTS_BASE_PATH: /RonSijm.Blazyload.Components/
+          BLAZY_COMPONENTS_DEMO: Orchestrator
+        run: dotnet test Tests/RonSijm.Blazyload.Components.IntegrationTests/RonSijm.Blazyload.Components.IntegrationTests.csproj -c Release --no-build
+      - name: Upload demo site
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages-example
+          path: dist/Orchestrator/wwwroot
+          include-hidden-files: true
+          if-no-files-found: error
+
+  deploy:
+    needs: publish
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages-example
+          path: dist/Orchestrator/wwwroot
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
+          folder: dist/Orchestrator/wwwroot
+          single-commit: true

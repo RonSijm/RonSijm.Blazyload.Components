@@ -1,0 +1,27 @@
+<Project>
+  <PropertyGroup>
+    <_BlazyComponentsTaskSource>$(MSBuildThisFileDirectory)src\RonSijm.Blazyload.Components.Build\bin\$(Configuration)\net8.0\RonSijm.Blazyload.Components.Build.dll</_BlazyComponentsTaskSource>
+    <BlazyComponentsBuildTaskAssembly>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)blazy-components-tools\$([System.Guid]::NewGuid())\RonSijm.Blazyload.Components.Build.dll</BlazyComponentsBuildTaskAssembly>
+  </PropertyGroup>
+  <!-- Loaded tool copies are MSBuild caches, not cleanable project outputs. -->
+  <Target Name="CopyBlazyComponentsBuildTask" BeforeTargets="GenerateBlazyComponentManifest" DependsOnTargets="ResolveReferences" Condition="'$(BlazyComponentsGenerateManifest)' == 'true'">
+    <Copy SourceFiles="$(_BlazyComponentsTaskSource)" DestinationFiles="$(BlazyComponentsBuildTaskAssembly)" SkipUnchangedFiles="true" />
+  </Target>
+  <Import Project="$(MSBuildThisFileDirectory)src\RonSijm.Blazyload.Components\buildTransitive\RonSijm.Blazyload.Components.targets" />
+  <PropertyGroup>
+    <BlazyComponentsContractGeneratorAssembly>$(MSBuildThisFileDirectory)src\RonSijm.Blazyload.Components.SourceGenerator\bin\$(Configuration)\netstandard2.0\RonSijm.Blazyload.Components.SourceGenerator.dll</BlazyComponentsContractGeneratorAssembly>
+    <_BlazyContractsToolsSource>$(MSBuildThisFileDirectory)src\RonSijm.Blazyload.Components.SourceGenerator.Build\bin\$(Configuration)\net8.0\</_BlazyContractsToolsSource>
+    <BlazyComponentsContractsTaskAssembly>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'blazy-contracts-tools\$([System.Guid]::NewGuid())\RonSijm.Blazyload.Components.SourceGenerator.Build.dll'))</BlazyComponentsContractsTaskAssembly>
+  </PropertyGroup>
+  <Target Name="BuildLocalBlazyContractsTools" BeforeTargets="PrepareBlazyComponentContracts;ResolveBlazyComponentContractReferences;PackBlazyComponentContracts" Condition="'$(BlazyComponentsExportContracts)' == 'true' or '@(BlazyComponentContractReference)' != ''">
+    <!-- A distinct restore instance lets Build reevaluate the generated NuGet imports. -->
+    <MSBuild Projects="$(MSBuildThisFileDirectory)src\RonSijm.Blazyload.Components.SourceGenerator\RonSijm.Blazyload.Components.SourceGenerator.csproj" Targets="Restore" Properties="Configuration=$(Configuration);_BlazyContractsRestoreOnly=true" RemoveProperties="TargetFramework;TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;NoBuild;BuildProjectReferences;IsTrimmable;IsAotCompatible;DesignTimeBuild;BuildingInsideVisualStudio" />
+    <MSBuild Projects="$(MSBuildThisFileDirectory)src\RonSijm.Blazyload.Components.SourceGenerator\RonSijm.Blazyload.Components.SourceGenerator.csproj" Targets="Build" Properties="Configuration=$(Configuration)" RemoveProperties="TargetFramework;TargetFrameworks;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishDir;PublishUrl;OutputPath;OutDir;BaseIntermediateOutputPath;IntermediateOutputPath;GHPages;NoBuild;BuildProjectReferences;IsTrimmable;IsAotCompatible;DesignTimeBuild;BuildingInsideVisualStudio" />
+    <ItemGroup>
+      <_BlazyContractsTools Include="$(_BlazyContractsToolsSource)*.dll" />
+      <Analyzer Include="$(BlazyComponentsContractGeneratorAssembly)" Condition="'$(BlazyComponentsExportContracts)' == 'true'" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_BlazyContractsTools)" DestinationFolder="$([System.IO.Path]::GetDirectoryName('$(BlazyComponentsContractsTaskAssembly)'))" />
+  </Target>
+  <Import Project="$(MSBuildThisFileDirectory)src\RonSijm.Blazyload.Components.SourceGenerator\build\RonSijm.Blazyload.Components.SourceGenerator.targets" />
+</Project>

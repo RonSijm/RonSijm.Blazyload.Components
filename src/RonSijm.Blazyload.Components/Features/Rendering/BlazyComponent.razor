@@ -1,0 +1,7 @@
+@namespace RonSijm.Blazyload.Components
+@using Microsoft.AspNetCore.Components
+
+@if (_componentType is not null)
+{
+    <DynamicComponent @key="_componentType" Type="@_componentType" Parameters="@_parameters" />
+}

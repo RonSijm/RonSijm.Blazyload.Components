@@ -1,0 +1,20 @@
+<header class="orchestrator-header">
+    <NavLink class="orchestrator-brand" href="" Match="NavLinkMatch.All" data-testid="demo-home">Demo orchestrator</NavLink>
+    <nav aria-label="Demos">
+        <NavLink href="Simple/" data-testid="choose-simple">Simple</NavLink>
+        <NavLink href="Extensive/" data-testid="choose-extensive">Extensive</NavLink>
+    </nav>
+    <p>One Blazor runtime. Demos load on demand.</p>
+</header>
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" />
+    </Found>
+    <NotFound>
+        <main class="orchestrator-intro">
+            <h1>Demo not found</h1>
+            <p>Choose Simple or Extensive above.</p>
+        </main>
+    </NotFound>
+</Router>
