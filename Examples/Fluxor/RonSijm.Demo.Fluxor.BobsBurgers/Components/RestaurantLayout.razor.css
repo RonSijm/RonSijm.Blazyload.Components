@@ -1,0 +1,43 @@
+.restaurant-shell {
+    --fluxor-panel: #fff;
+    --fluxor-soft: #eff8f5;
+    --fluxor-ink: #29221e;
+    --fluxor-muted: #227169;
+    --fluxor-link: #a32623;
+    background: #fff7e9;
+    color: var(--fluxor-ink);
+}
+
+.restaurant-shell[data-theme="dark"] {
+    --fluxor-panel: #203a34;
+    --fluxor-soft: #244a40;
+    --fluxor-ink: #edf7f1;
+    --fluxor-muted: #7fcabb;
+    --fluxor-link: #ffae9a;
+    background: #142420;
+}
+
+.shell-header {
+    max-width: 70rem;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid var(--fluxor-muted);
+    line-height: 1.6;
+}
+
+.shell-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 2rem;
+}
+
+pre {
+    padding: 1rem;
+    background: var(--fluxor-soft);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+code {
+    overflow-wrap: anywhere;
+}

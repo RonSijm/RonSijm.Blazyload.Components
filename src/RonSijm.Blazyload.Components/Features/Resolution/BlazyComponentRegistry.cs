@@ -6,6 +6,7 @@ internal sealed class BlazyComponentRegistry(IBlazyComponentManifestProvider man
 {
     private readonly Lazy<Task<Dictionary<string, BlazyComponentDescriptor>>> _manifest = new(() => ReadManifestAsync(manifestProvider, logger));
     private readonly ConcurrentDictionary<string, Lazy<Task<BlazyComponentDescriptor>>> _resolutions = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, Lazy<Task<List<Assembly>>>> _assemblyLoads = new(StringComparer.OrdinalIgnoreCase);
 
     public async ValueTask<BlazyComponentDescriptor> ResolveAsync(string name, CancellationToken cancellationToken = default)
     {
@@ -100,7 +101,8 @@ internal sealed class BlazyComponentRegistry(IBlazyComponentManifestProvider man
     {
         try
         {
-            var assemblies = await assemblyLoader.LoadAssemblyAsync($"{descriptor.AssemblyName}.wasm");
+            var load = _assemblyLoads.GetOrAdd(descriptor.AssemblyName, name => new Lazy<Task<List<Assembly>>>(() => assemblyLoader.LoadAssemblyAsync($"{name}.wasm")));
+            var assemblies = await load.Value;
             var assembly = assemblies.Concat(assemblyLoader.AdditionalAssemblies).Concat(AppDomain.CurrentDomain.GetAssemblies()).FirstOrDefault(candidate => string.Equals(candidate.GetName().Name, descriptor.AssemblyName, StringComparison.OrdinalIgnoreCase));
             if (assembly is null)
             {

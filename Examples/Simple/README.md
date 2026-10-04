@@ -20,6 +20,8 @@ The feature projects are Razor Class Libraries: reusable projects containing `.r
 
 The live site renders this demo inside the [shared orchestrator](../README.md#what-does-the-orchestrator-do). Switching to Extensive uses the same Blazor runtime; it doesn't start another app. Simple's feature projects don't gain any generated-contract dependencies because of this.
 
+The third [Fluxor example](../Fluxor/README.md) adds shared state, reducers and effects to a lazy feature. The orchestrator initializes Fluxor to host it, but Simple's standalone app and feature libraries stay Fluxor-free.
+
 ## Run it
 
 To run Simple by itself, use this standalone host from `Examples\Simple`, with a .NET 10 SDK:

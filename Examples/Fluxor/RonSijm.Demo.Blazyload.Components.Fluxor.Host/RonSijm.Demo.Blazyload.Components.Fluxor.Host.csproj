@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <BlazyComponentsGenerateManifest>true</BlazyComponentsGenerateManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Shared\*.cs" Link="Diagnostics\%(Filename)%(Extension)" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.*" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.*" PrivateAssets="all" />
+    <PackageReference Include="Fluxor.Blazor.Web.ReduxDevTools" Version="6.11.0" />
+    <PackageReference Include="RonSijm.Blazyload.Fluxor" Version="2.0.1" />
+    <ProjectReference Include="..\..\..\src\RonSijm.Blazyload.Components\RonSijm.Blazyload.Components.csproj" />
+    <ProjectReference Include="..\RonSijm.Demo.Fluxor.BobsBurgers\RonSijm.Demo.Fluxor.BobsBurgers.csproj" />
+    <ProjectReference Include="..\RonSijm.Demo.Fluxor.WonderWharf\RonSijm.Demo.Fluxor.WonderWharf.csproj" />
+    <BlazyComponentContractReference Include="..\RonSijm.Demo.Fluxor.WonderWharf\RonSijm.Demo.Fluxor.WonderWharf.csproj" />
+    <BlazorWebAssemblyLazyLoad Include="RonSijm.Demo.Fluxor.BobsBurgers.wasm" />
+    <BlazorWebAssemblyLazyLoad Include="RonSijm.Demo.Fluxor.WonderWharf.wasm" />
+    <TrimmerRootAssembly Include="RonSijm.Demo.Fluxor.BobsBurgers" />
+    <TrimmerRootAssembly Include="RonSijm.Demo.Fluxor.WonderWharf" />
+    <TrimmerRootAssembly Include="RonSijm.Blazyload.Fluxor" />
+  </ItemGroup>
+  <Target Name="ConfigureGitHubPages" AfterTargets="Publish">
+    <PropertyGroup>
+      <_DemoBaseHref>/</_DemoBaseHref>
+      <_DemoBaseHref Condition="'$(GHPages)' == 'true'">/RonSijm.Blazyload.Components/Fluxor/</_DemoBaseHref>
+    </PropertyGroup>
+    <ReadLinesFromFile File="$(PublishDir)wwwroot\index.html">
+      <Output TaskParameter="Lines" ItemName="_GitHubPagesIndexLines" />
+    </ReadLinesFromFile>
+    <WriteLinesToFile File="$(PublishDir)wwwroot\index.html" Lines="@(_GitHubPagesIndexLines->Replace('&lt;base href=&quot;/RonSijm.Blazyload.Components/Fluxor/&quot; /&gt;', '&lt;base href=&quot;/&quot; /&gt;')->Replace('&lt;base href=&quot;/&quot; /&gt;', '&lt;base href=&quot;$(_DemoBaseHref)&quot; /&gt;'))" Overwrite="true" Encoding="UTF-8" />
+    <Touch Files="$(PublishDir)wwwroot\.nojekyll" AlwaysCreate="true" Condition="'$(GHPages)' == 'true'" />
+  </Target>
+</Project>

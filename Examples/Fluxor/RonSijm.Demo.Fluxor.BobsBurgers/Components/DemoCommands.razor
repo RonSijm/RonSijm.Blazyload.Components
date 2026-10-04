@@ -1,0 +1,19 @@
+@using Microsoft.AspNetCore.Components
+@using RonSijm.Syringe
+@using RonSijm.Demo.Fluxor.BobsBurgers.Redux
+@inherits FluxorDispatcherComponent
+
+<div class="demo-commands" data-testid="fluxor-dispatcher-controls">
+    <button data-testid="fluxor-toggle-theme" disabled="@ThemeBusy" @onclick="() => Dispatcher.Dispatch(new ToggleDemoTheme())">Toggle shell theme</button>
+    <button data-testid="fluxor-navigate-guide" @onclick="NavigateToGuide">Navigate to the library guide</button>
+    <p><code>FluxorDispatcherComponent</code>: these controls receive no feature state and call no browser API. They dispatch intent; effects own JavaScript and navigation.</p>
+</div>
+
+@code {
+    [Parameter] public bool ThemeBusy { get; set; }
+
+    private void NavigateToGuide()
+    {
+        Dispatcher.Dispatch(new NavigateDemoSection("fluxor-benefits"));
+    }
+}

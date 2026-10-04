@@ -1,7 +1,7 @@
 param(
     [string] $BrowserChannel = "msedge",
     [switch] $GitHubPages,
-    [ValidateSet("All", "Orchestrator", "Simple", "Extensive")]
+    [ValidateSet("All", "Orchestrator", "Simple", "Extensive", "Fluxor")]
     [string] $Demo = "Orchestrator"
 )
 
@@ -10,9 +10,11 @@ $previousPublishRoot = $env:BLAZY_COMPONENTS_PUBLISH_ROOT
 $previousBrowserChannel = $env:BLAZY_COMPONENTS_BROWSER_CHANNEL
 $previousBasePath = $env:BLAZY_COMPONENTS_BASE_PATH
 $previousDemo = $env:BLAZY_COMPONENTS_DEMO
+$previousReduxDevTools = $env:BLAZY_COMPONENTS_VERIFY_REDUX_DEVTOOLS
 Push-Location $PSScriptRoot
 try {
-    $demos = @("Orchestrator", "Simple", "Extensive")
+    $env:BLAZY_COMPONENTS_VERIFY_REDUX_DEVTOOLS = "false"
+    $demos = @("Orchestrator", "Simple", "Extensive", "Fluxor")
     if ($Demo -ne "All") {
         $demos = $demos | Where-Object { $_ -eq $Demo }
     }
@@ -52,5 +54,6 @@ finally {
     $env:BLAZY_COMPONENTS_BROWSER_CHANNEL = $previousBrowserChannel
     $env:BLAZY_COMPONENTS_BASE_PATH = $previousBasePath
     $env:BLAZY_COMPONENTS_DEMO = $previousDemo
+    $env:BLAZY_COMPONENTS_VERIFY_REDUX_DEVTOOLS = $previousReduxDevTools
     Pop-Location
 }

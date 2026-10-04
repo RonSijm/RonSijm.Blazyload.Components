@@ -7,6 +7,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\Examples\Fluxor\Shared\*.cs" Link="Diagnostics\%(Filename)%(Extension)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
@@ -25,5 +26,8 @@
     <ProjectReference Include="..\..\Examples\Extensive\RonSijm.Demo.BobsBurgers\RonSijm.Demo.BobsBurgers.csproj" />
     <ProjectReference Include="..\..\Examples\Simple\RonSijm.Demo.Blazyload.Components.Burger\RonSijm.Demo.Blazyload.Components.Burger.csproj" />
     <ProjectReference Include="..\..\Examples\Simple\RonSijm.Demo.Blazyload.Components.Pizza\RonSijm.Demo.Blazyload.Components.Pizza.csproj" />
+    <ProjectReference Include="..\..\Examples\Fluxor\RonSijm.Demo.Fluxor.BobsBurgers\RonSijm.Demo.Fluxor.BobsBurgers.csproj" />
+    <ProjectReference Include="..\..\Examples\Fluxor\RonSijm.Demo.Fluxor.WonderWharf\RonSijm.Demo.Fluxor.WonderWharf.csproj" />
+    <BlazyComponentContractReference Include="..\..\Examples\Fluxor\RonSijm.Demo.Fluxor.WonderWharf\RonSijm.Demo.Fluxor.WonderWharf.csproj" />
   </ItemGroup>
 </Project>

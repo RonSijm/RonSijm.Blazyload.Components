@@ -1,0 +1,14 @@
+@inherits ViewModelComponent<WonderWharfViewModel>
+@attribute [BlazyComponent("fluxor.wonderwharf.summary")]
+@inject RonSijm.Demo.Fluxor.WonderWharf.Services.WharfEventService Service
+@inject WharfTraceMiddleware Trace
+
+<aside data-testid="fluxor-summary">
+    <h2>Same feature, second component</h2>
+    <p>This summary and the calendar resolve concurrently from one assembly and subscribe to the same state.</p>
+    <p>Successful loads: <strong data-testid="fluxor-load-count">@ViewModel.LoadCount</strong></p>
+    <p>Effect/service calls: <strong data-testid="fluxor-service-count">@Service.RequestCount</strong></p>
+    <p>Load actions seen by the dynamically registered middleware: <strong data-testid="fluxor-middleware-count">@Trace.LoadActionsSeen</strong></p>
+    <p>Selected event ID: <strong data-testid="fluxor-summary-selection">@ViewModel.SelectedEventId</strong></p>
+    <p><code>[ReducerMethod]</code> updates loading/results. <code>Reducer&lt;WonderWharfViewModel, SelectWharfEvent&gt;</code> updates selection. Both are attached before the calendar dispatches its first action.</p>
+</aside>

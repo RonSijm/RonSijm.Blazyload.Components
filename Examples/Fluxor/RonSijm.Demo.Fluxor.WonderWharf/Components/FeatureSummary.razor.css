@@ -1,0 +1,7 @@
+aside {
+    padding: 1rem;
+    border: 1px solid #227169;
+    border-radius: .75rem;
+    background: var(--fluxor-soft, #eff8f5);
+    overflow-wrap: anywhere;
+}

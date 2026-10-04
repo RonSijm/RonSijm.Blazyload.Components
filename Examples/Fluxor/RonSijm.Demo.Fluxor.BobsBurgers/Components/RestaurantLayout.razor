@@ -1,0 +1,20 @@
+@using global::Fluxor
+@using RonSijm.Syringe
+@using RonSijm.Demo.Fluxor.BobsBurgers.Redux
+@inherits ViewModelLayout<RestaurantShellViewModel>
+
+<div class="restaurant-shell" data-testid="fluxor-shell" data-theme="@(ViewModel.Preferences?.IsDarkMode == true ? "dark" : "light")">
+    <header class="shell-header">
+        <strong>Feature application shell</strong>
+        <p><code>ViewModelLayout&lt;RestaurantShellViewModel&gt;</code> reads a composed ViewModel, not a collection of manually wired state subscriptions.</p>
+        <div class="shell-values" data-testid="fluxor-composed-state">
+            <span>Theme: <strong data-testid="fluxor-shell-theme">@(ViewModel.Preferences?.IsDarkMode == true ? "Dark" : "Light")</strong></span>
+            <span>Callback selection: <strong data-testid="fluxor-shell-selection">@(ViewModel.Restaurant?.SelectedEvent?.Name ?? "None")</strong></span>
+            <span>Public event: <strong data-testid="fluxor-shell-broadcast">@(ViewModel.Restaurant?.BroadcastEvent?.Name ?? "None")</strong></span>
+        </div>
+        <DemoCommands ThemeBusy="@(ViewModel.Preferences?.IsApplyingTheme == true)" />
+        <BrowserStatus />
+        <pre><code>@("[ReduceInto] public RestaurantViewModel? Restaurant { get; init; }\n[ReduceInto] public PreferencesViewModel? Preferences { get; init; }")</code></pre>
+    </header>
+    @Body
+</div>

@@ -1,0 +1,12 @@
+@using RonSijm.Syringe
+@using RonSijm.Demo.Fluxor.BobsBurgers.Redux
+@inherits ViewModelComponent<PreferencesViewModel>
+
+<div data-testid="fluxor-browser-status">
+    <p data-testid="fluxor-browser-message">@ViewModel.BrowserMessage</p>
+    <p>First-render effects completed: <strong data-testid="fluxor-first-render-count">@ViewModel.FirstRenderCount</strong>. Last navigation action: <strong data-testid="fluxor-last-navigation">@(ViewModel.LastNavigation ?? "None")</strong>.</p>
+    @if (ViewModel.Error is not null)
+    {
+        <p role="alert" data-testid="fluxor-browser-error">@ViewModel.Error</p>
+    }
+</div>

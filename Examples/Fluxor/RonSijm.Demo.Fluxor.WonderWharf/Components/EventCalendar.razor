@@ -1,0 +1,49 @@
+@inherits ViewModelComponent<WonderWharfViewModel>
+@attribute [BlazyComponent("fluxor.wonderwharf.events")]
+
+<section class="fluxor-calendar" data-testid="fluxor-calendar">
+    <p class="eyebrow">Wonder Wharf / lazy producer</p>
+    <h2>@Title</h2>
+    <p>Requested by <strong data-testid="fluxor-restaurant-name">@Model?.RestaurantName</strong>. This component reads its own Fluxor ViewModel; Bob's Burgers does not.</p>
+    <pre><code>@("@inherits ViewModelComponent<WonderWharfViewModel>\nDispatcher.Dispatch(new LoadWharfEvents());")</code></pre>
+    @if (ViewModel.IsLoading)
+    {
+        <p role="status" data-testid="fluxor-loading">The effect is requesting events...</p>
+    }
+    @if (ViewModel.Error is not null)
+    {
+        <p role="alert" data-testid="fluxor-error">@ViewModel.Error</p>
+    }
+    <ul data-testid="fluxor-events">
+        @foreach (var item in ViewModel.Events)
+        {
+            <li>
+                <button data-testid="fluxor-select-event" aria-pressed="@(ViewModel.SelectedEventId == item.Id)" @onclick="() => SelectAsync(item)">
+                    @item.Date.ToString("yyyy-MM-dd"): @item.Name
+                </button>
+            </li>
+        }
+    </ul>
+    <p>Selected in Wonder Wharf state: <strong data-testid="fluxor-wharf-selection">@SelectedName</strong></p>
+    <div class="buttons">
+        <button data-testid="fluxor-refresh" disabled="@ViewModel.IsLoading" @onclick="() => Dispatcher.Dispatch(new LoadWharfEvents())">Refresh events</button>
+        <button data-testid="fluxor-fail" disabled="@ViewModel.IsLoading" @onclick="() => Dispatcher.Dispatch(new LoadWharfEvents(true))">Simulate service failure</button>
+        <button data-testid="fluxor-broadcast" disabled="@(ViewModel.SelectedEventId is null)" @onclick="() => Dispatcher.Dispatch(new PublishSelectedWharfEvent())">Publish selected event to the application</button>
+    </div>
+    <p>Selection dispatches a private <code>SelectWharfEvent</code> action here, then invokes an ordinary <code>EventCallback&lt;WharfEventSelection&gt;</code> for the parent. Fluxor does not replace the component contract.</p>
+    <p>The separate publish button uses a property-injected effect to dispatch the exported <code>WharfEventSelected</code> action. Any interested domain can handle that public message without injecting Wonder Wharf's private state.</p>
+</section>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Wonder Wharf events, powered by Fluxor";
+    [Parameter] public CalendarRequest? Model { get; set; }
+    [Parameter] public EventCallback<WharfEventSelection> EventSelected { get; set; }
+
+    private string SelectedName => ViewModel.Events.FirstOrDefault(item => item.Id == ViewModel.SelectedEventId)?.Name ?? "None";
+
+    private async Task SelectAsync(WharfEvent item)
+    {
+        Dispatcher.Dispatch(new SelectWharfEvent(item.Id));
+        await EventSelected.InvokeAsync(new WharfEventSelection(item.Id, item.Name, item.Date));
+    }
+}

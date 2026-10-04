@@ -1,6 +1,6 @@
 # RonSijm.Blazyload.Components
 
-[Open the demo orchestrator](https://ronsijm.github.io/RonSijm.Blazyload.Components/): [Simple](https://ronsijm.github.io/RonSijm.Blazyload.Components/Simple/) or [Extensive](https://ronsijm.github.io/RonSijm.Blazyload.Components/Extensive/). The orchestrator runs both demos inside one Blazor app; switching demos doesn't restart WebAssembly.
+[Open the demo orchestrator](https://ronsijm.github.io/RonSijm.Blazyload.Components/): [Simple](https://ronsijm.github.io/RonSijm.Blazyload.Components/Simple/), [Extensive](https://ronsijm.github.io/RonSijm.Blazyload.Components/Extensive/) or [Fluxor](https://ronsijm.github.io/RonSijm.Blazyload.Components/Fluxor/). The orchestrator runs the demos inside one Blazor app; switching demos doesn't restart WebAssembly.
 
 **RonSijm.Blazyload.Components is an opinionated plugin framework for Blazor WebAssembly UI**, built on the more general RonSijm.Blazyload assembly loader.
 
@@ -13,6 +13,8 @@ It treats feature libraries as plugins: each can supply UI that another feature 
 This is for **Blazor WebAssembly**, where .NET code runs in the browser. It isn't a setup for Blazor components running on a server. The libraries target .NET 8, 9 and 10; the examples use .NET 10.
 
 Start with [Simple](Examples/Simple/README.md) if your use case is "I want this composition, but not an over-complicated setup." It preserves the original Burger/Pizza demo with minimal changes and dependencies, and no source generator. [Extensive](Examples/Extensive/README.md) adds the storefront, generated contracts and fuller explanations.
+
+[Fluxor](Examples/Fluxor/README.md) is an intentionally over-engineered tech demo: lazy UI/state/behavior join an existing store, with state-aware layouts, `[ReduceInto]`, lifecycle/browser effects, public actions and diagnostics. Think of its tiny screen as 10% of a larger application. Components does not depend on Fluxor; the example combines the existing packages in the host.
 
 For your own application, read [Setup](#setup) and [Parameters and callbacks](#parameters-and-callbacks) first. [Generated contracts](#generate-contracts-without-maintaining-another-project) are optional. You don't need to understand the build internals to render a component by name.
 
@@ -450,7 +452,9 @@ For a component that hasn't been resolved yet:
 
 The catalog contains names and type information, not implementation code. Reading it doesn't load or execute all the component implementations.
 
-**Resolution** means turning a friendly name into a loaded component `Type`. The registry remembers that result, so repeated or simultaneous requests for the same name reuse the same work. It caches the lookup and load operation, not the rendered component instance or its UI state.
+**Resolution** means turning a friendly name into a loaded component `Type`. The registry remembers that result, so repeated or simultaneous requests for the same name reuse the same work. Different names from the same producer assembly also share one loader task in that registry, preventing overlapping requests from bootstrapping the producer twice. It caches the lookup and load operation, not the rendered component instance or its UI state.
+
+This sharing applies to requests through the same registry. Separate registries and direct calls to core's loading/navigation API are outside it.
 
 When an assembly is already loaded, Components searches the loader's results, its `AdditionalAssemblies` list and the assemblies available to .NET. It doesn't assume a download must happen for every render.
 
@@ -573,15 +577,17 @@ From the repository root, with a .NET 10 SDK:
 dotnet run --project .\Examples\Orchestrator
 ```
 
-The orchestrator is a small host app that chooses which demo to display. It uses `<BlazyComponent Name="burger.editor" />` or `<BlazyComponent Name="bobsburgers.dashboard" />` to load the demo's first component. All eight feature assemblies, including shared models, wait until needed.
+The orchestrator is a small host app that chooses which demo to display. It requests `burger.editor`, `bobsburgers.dashboard` or `fluxor.bobsburgers.dashboard` through `<BlazyComponent>` to load each demo's first component. All eleven feature assemblies, including shared models, wait until needed.
 
-Blazor routing changes the displayed component without loading another HTML document or restarting .NET in the browser. Loaded assemblies and registered services remain available; a demo's local title/date state resets when you leave it because its component is disposed.
+Blazor routing changes the displayed component without loading another HTML document or restarting .NET in the browser. Loaded assemblies and registered services remain available. Component-local fields reset with new instances; the Fluxor demo's store state remains until the browser is refreshed.
 
 **Simple** keeps the original Burger editor. Click **Show pizza calendar**, select a date and change its title. It uses string component names and a tiny handwritten model contract; it doesn't need generated identifiers or a contracts-export pipeline.
 
 **Extensive** uses a sales-site layout to explain component composition. The consumer's Razor request, loading steps and project-reference boundary are visible rather than hidden behind restaurant copy. Click **Load Wonder Wharf component** to load the calendar and its event-service dependency. Use **Send DateSelected callback** and **Update Title parameter** to see ordinary Blazor interaction across the domain boundary.
 
 The loaded calendar shows its producer code, generated model contract and asset results. **Extra tooling** compares the generated contracts with Simple's handwritten version. `BurgerOfTheDay` and `RideSchedule` explain direct rendering within an already-loaded feature. No expandable sections are needed to see what happens.
+
+**Fluxor** keeps that contracts boundary while loading Wonder Wharf's state and behavior with its UI. Two named components share producer state; Bob's layout composes its own restaurant/preferences features. Compare name-based mounting with native assembly/path preloading, callback selection with public application actions, and lifecycle-driven JS with navigation effects. The [setup README](Examples/Fluxor/README.md#benefit-to-working-example) maps each integration benefit to working controls and source files, including current package limitations.
 
 Open the browser's developer tools (**F12**), select **Network**, enable **Disable cache** and reload before filtering for `WonderWharf`. You can watch the feature assemblies download on demand. In this .NET 10 example the DLLs are delivered as `.wasm` files; a content-based **fingerprint** in the filename lets browsers cache the correct version. The small `WonderWharf.Contracts` assembly loads when you choose Extensive; the implementation and services wait for the storefront's button.
 
@@ -625,10 +631,11 @@ For the published-browser check:
 .\Verify-Publish.ps1 -GitHubPages
 .\Verify-Publish.ps1 -Demo Simple
 .\Verify-Publish.ps1 -Demo Extensive
+.\Verify-Publish.ps1 -Demo Fluxor
 .\Verify-Publish.ps1 -Demo All
 ```
 
-The script publishes in Release and checks lazy assembly requests, DI, callbacks, CSS, images and JavaScript in a browser. By default it checks both demos inside the orchestrator, including switching without another document or runtime download. `-Demo Simple` or `Extensive` selects a standalone host; `All` checks all three. Microsoft Edge is the default; use `-BrowserChannel chrome` for installed Chrome, or install Playwright Chromium and use `-BrowserChannel chromium`.
+The script publishes in Release and checks lazy assembly requests, DI, callbacks, CSS, images and JavaScript in a browser, plus dynamic Fluxor registration, handled service errors and state lifetime. By default it checks all three demos inside the orchestrator, including switching without another document or runtime download. `-Demo Simple`, `Extensive` or `Fluxor` selects a standalone host; `All` checks all four hosts. Microsoft Edge is the default; use `-BrowserChannel chrome` for installed Chrome, or install Playwright Chromium and use `-BrowserChannel chromium`.
 
 Run this separately from the unit/rendering tests; it needs the published files.
 
@@ -637,11 +644,11 @@ Run this separately from the unit/rendering tests; it needs the published files.
 | Workflow | On `main` | On a pull request |
 |---|---|---|
 | `build_main.yml` | Build, test, pack and publish to NuGet | Build, test and pack |
-| `deploy_demo1.yml` | Publish, browser-check and deploy the orchestrator to `gh-pages` | Publish and browser-check the orchestrator and both demos |
+| `deploy_demo1.yml` | Publish, browser-check and deploy the orchestrator to `gh-pages` | Publish and browser-check the orchestrator and all three demos |
 
 Add `NUGET_API_KEY` to the repository secrets. For a new package release, update `VersionPrefix` in `BuildSettings\NuGetVersioning.props`; duplicate versions are skipped.
 
-Set **Settings > Pages** to the **gh-pages** branch, root folder. The orchestrator is at <https://ronsijm.github.io/RonSijm.Blazyload.Components/>. `Simple/` and `Extensive/` are routes in that app, with copies of the same host shell for direct links and refreshes.
+Set **Settings > Pages** to the **gh-pages** branch, root folder. The orchestrator is at <https://ronsijm.github.io/RonSijm.Blazyload.Components/>. `Simple/`, `Extensive/` and `Fluxor/` are routes in that app, with copies of the same host shell for direct links and refreshes.
 
 Deployments replace `gh-pages` with a single-commit snapshot of the current website instead of keeping deployment history. This discards the old history on `gh-pages`, not the source history on `main`.
 

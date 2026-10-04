@@ -1,0 +1,153 @@
+@using global::Fluxor
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Routing
+@using RonSijm.Blazyload
+@using RonSijm.Blazyload.Components
+@using RonSijm.Syringe
+@using RonSijm.Demo.Fluxor.BobsBurgers.Redux
+@using RonSijm.Demo.Fluxor.WonderWharf.Contracts
+@using RonSijm.Demo.Fluxor.WonderWharf.Models
+@inherits ViewModelComponent<RestaurantViewModel>
+@attribute [BlazyComponent("fluxor.bobsburgers.dashboard")]
+@inject IStore Store
+@inject IState<AssembliesLoadedState> NativeLoads
+
+<LayoutView Layout="@typeof(RestaurantLayout)">
+<article class="fluxor-demo" data-testid="fluxor-dashboard">
+    <header>
+        <p class="eyebrow">Bob's Burgers / Components + Fluxor</p>
+        <h1>Load a feature. Keep the store.</h1>
+        <p>Wonder Wharf brings its own UI, state, reducers, effects, service and middleware into this already-running app. Bob's Burgers knows only the generated public names, request/selection models and application event.</p>
+        <p class="demo-mindset" data-testid="fluxor-demo-mindset"><strong>Intentionally over-engineered.</strong> Two events do not need this much architecture. Treat this screen as about 10% of a larger project: the point is a repeatable foundation for independently developed features, not the shortest way to draw this calendar. Simple remains the minimal example.</p>
+        <pre data-testid="fluxor-consumer-code"><code>@("<BlazyComponent Name=\"@WonderWharfComponents.Events\" Parameters=\"@_parameters\" />\n<BlazyComponent Name=\"@WonderWharfComponents.Summary\" />")</code></pre>
+        <div class="buttons">
+            <button data-testid="fluxor-show" disabled="@(_showCalendar || ViewModel.PreloadPending)" @onclick="ShowCalendar">Load / mount Wonder Wharf by name</button>
+            <button data-testid="fluxor-hide" disabled="@(!_showCalendar)" @onclick="() => _showCalendar = false">Dispose both components</button>
+        </div>
+        <div class="preload-controls" data-testid="fluxor-preload-controls">
+            <h2>Or let Fluxor request the feature first</h2>
+            <div class="buttons">
+                <button data-testid="fluxor-preload-assembly" disabled="@(WharfLoaded || _showCalendar || ViewModel.PreloadPending)" @onclick="() => Dispatcher.Dispatch(new PreloadWharf(false))">Preload with LoadAssembly</button>
+                <button data-testid="fluxor-preload-path" disabled="@(WharfLoaded || _showCalendar || ViewModel.PreloadPending)" @onclick="() => Dispatcher.Dispatch(new PreloadWharf(true))">Preload with LoadAssemblyForPath</button>
+            </div>
+            <p>These actions load and register the feature without mounting its components or requesting event data. Then use the name-based mount button. Reload the browser to compare the other cold-load path.</p>
+            <pre><code>@("Dispatcher.Dispatch(new LoadAssembly(\"RonSijm.Demo.Fluxor.WonderWharf.wasm\"));\nDispatcher.Dispatch(new LoadAssemblyForPath(\"fluxor/wharf\"));")</code></pre>
+            @if (ViewModel.PreloadPending)
+            {
+                <p role="status">Fluxor requested the feature; waiting for Blazyload's assembly-loaded notification.</p>
+            }
+        </div>
+    </header>
+
+    <section class="diagnostics" data-testid="fluxor-diagnostics">
+        <h2>The running app, not a diagram</h2>
+        <p>Store instance: <strong data-testid="fluxor-store-id">@Store.GetHashCode()</strong></p>
+        <p>Wonder Wharf assembly: <strong data-testid="fluxor-assembly-status">@(WharfLoaded ? "Loaded" : "Not loaded")</strong></p>
+        <p>Wonder Wharf Fluxor feature: <strong data-testid="fluxor-feature-status">@(Store.Features.ContainsKey("Fluxor.WonderWharf") ? "Registered" : "Absent")</strong></p>
+        <p>Components: <strong data-testid="fluxor-mount-status">@(_showCalendar ? "Requested / mounted when ready" : "Not mounted")</strong></p>
+        <p>Registered feature names: <code data-testid="fluxor-features">@string.Join(", ", Store.Features.Keys)</code></p>
+        <p>Bob's own Fluxor selection: <strong data-testid="fluxor-bob-selection">@(ViewModel.SelectedEvent?.Name ?? "None")</strong></p>
+        <p>Public application event: <strong data-testid="fluxor-bob-broadcast">@(ViewModel.BroadcastEvent?.Name ?? "None")</strong> (<span data-testid="fluxor-public-event-count">@ViewModel.PublicEventCount</span> received)</p>
+        <p>Preload strategy: <strong data-testid="fluxor-preload-strategy">@(ViewModel.PreloadStrategy ?? "Component-name request")</strong></p>
+        <p>Blazyload.Fluxor action-result state: <code data-testid="fluxor-native-loads">@string.Join(", ", NativeLoads.Value.LoadedAssemblies.Select(assembly => assembly.GetName().Name))</code></p>
+    </section>
+
+    @if (_showCalendar)
+    {
+        <div class="producer-components">
+            <BlazyComponent Name="@WonderWharfComponents.Events" Parameters="@_parameters" />
+            <BlazyComponent Name="@WonderWharfComponents.Summary" />
+        </div>
+    }
+
+    <ActionTimeline />
+
+    <section id="fluxor-benefits" data-testid="fluxor-library-guide">
+        <h2>What each library buys you</h2>
+        <p>This is also a tech demo for the integrations. The extra components have jobs: the layout composes state, the command bar dispatches intent, lifecycle effects own browser work, and the producer owns its own workflow.</p>
+        <div class="library-grid">
+            <article>
+                <h3>Fluxor: searchable, shared workflows</h3>
+                <ul>
+                    <li>Request, success and failure actions make asynchronous work explicit.</li>
+                    <li>Immutable reducer output is independently testable; two components read one state.</li>
+                    <li>The selection callback stays parent/child communication. The publish button sends an intentionally public application action.</li>
+                    <li>The timeline shows action order in Release. Redux DevTools adds payloads, snapshots and history in Debug.</li>
+                </ul>
+            </article>
+            <article>
+                <h3>RonSijm.Blazyload.Fluxor</h3>
+                <ul>
+                    <li><code>UseFluxor</code> keeps one provider/store startup path.</li>
+                    <li><code>LoadAssembly</code> makes preloading an observable action/effect workflow.</li>
+                    <li><code>LoadAssemblyForPath</code> resolves the host's logical path-to-assembly mapping.</li>
+                    <li><code>AssemblyLoaded</code> lets Bob project availability without reading producer state. The lazy feature's behavior joins the existing store.</li>
+                </ul>
+            </article>
+            <article>
+                <h3>RonSijm.Fluxor.Blazor.Web.Extensions</h3>
+                <ul>
+                    <li><code>ViewModelComponent</code> supplies current state, dispatch and managed subscriptions.</li>
+                    <li><code>FluxorDispatcherComponent</code> supplies dispatch to the stateless command bar.</li>
+                    <li><code>ViewModelLayout</code> lets application chrome follow its own aggregate ViewModel.</li>
+                    <li>Initialization loads calendar data; first-render orchestration initializes browser interop. <code>PageEffect</code> filters by component and phase.</li>
+                </ul>
+            </article>
+            <article>
+                <h3>RonSijm.Syringe.Fluxor</h3>
+                <ul>
+                    <li><code>[Inject]</code> properties work on effects for HTTP, JavaScript, state, logging and navigation dependencies.</li>
+                    <li><code>[ReduceInto]</code> projects Bob's restaurant/preferences state into the shell without duplicate reducers.</li>
+                    <li>Dynamic registration attaches method reducers, reducer classes, typed effect classes and middleware.</li>
+                    <li>The host's startup <code>[EffectMethod]</code> audit logs assembly registration. Version 1.0.0 does not dynamically attach method-effect wrappers, so the lazy feature uses typed effect classes.</li>
+                    <li>The runtime and component tests use the same provider factory, so injection behavior is not replaced by a simpler test-only setup.</li>
+                </ul>
+            </article>
+        </div>
+        <p>We deliberately do not add fragile storage persistence or effect-unloading tricks. A foundation should expose the tradeoffs, not turn every optional package into a dependency.</p>
+    </section>
+
+    <section>
+        <h2>Follow one request</h2>
+        <ol>
+            <li><code>BlazyComponent</code> resolves the name from the catalog; Blazyload downloads the feature.</li>
+            <li>The bootstrap scans only its own assembly with <code>AddFluxorLibrary</code> and registers its service.</li>
+            <li>Syringe adds the feature, attached reducers, effects and middleware to the existing store before loading returns.</li>
+            <li><code>ViewModelComponent</code> subscribes to state and dispatches an initialization lifecycle action.</li>
+            <li>A lifecycle effect dispatches <code>LoadWharfEvents</code>. A property-injected effect calls the HTTP service, then dispatches success or failure.</li>
+            <li>Reducers return new state. The calendar and summary re-render from that same state.</li>
+        </ol>
+        <pre><code>@("builder.UseBlazyload(options => options.UseFluxor(...));\nbuilder.Services.AddBlazyloadComponents();\n// App.razor: <Fluxor.Blazor.Web.StoreInitializer />")</code></pre>
+    </section>
+
+    <section>
+        <h2>What changes compared with Simple and Extensive?</h2>
+        <p>Simple demonstrates name-based composition with little setup. Extensive adds generated contracts, services and assets. This example keeps that UI boundary and puts feature behavior in Fluxor: actions describe intent, pure reducers update state, effects perform HTTP work, and middleware observes dispatches.</p>
+        <p><code>RonSijm.Blazyload.Fluxor</code> connects loading to Fluxor. <code>RonSijm.Syringe.Fluxor</code> supplies dynamic registration and effect property injection. <code>RonSijm.Fluxor.Blazor.Web.Extensions</code> supplies ViewModel components and lifecycle actions. No <code>Components.Fluxor</code> adapter is needed.</p>
+        <p><strong>Disposal is not unloading.</strong> Hide the components, then show them again: selection and load count remain. Switch to another demo and return: component instances are new, but Fluxor state stays. Refresh the browser to start a new store. There is no local/session-storage persistence.</p>
+        <p>Open DevTools Network and filter for <code>RonSijm.Demo.Fluxor.WonderWharf</code>. Before the first request, its implementation is absent. Contracts may already be loaded. Debug builds also connect to the Redux DevTools browser extension; Release builds do not enable it.</p>
+        <p><a href="https://github.com/RonSijm/RonSijm.Blazyload.Components/tree/main/Examples/Fluxor">Read the setup and package responsibilities</a>.</p>
+    </section>
+</article>
+</LayoutView>
+
+@code {
+    private bool _showCalendar;
+    private IReadOnlyDictionary<string, object?> _parameters = new Dictionary<string, object?>();
+    private bool WharfLoaded => ViewModel.LoadedAssemblies.Contains(WonderWharfFeature.AssemblyName);
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _parameters = new Dictionary<string, object?>
+        {
+            ["Model"] = new CalendarRequest("Bob's Burgers"),
+            ["EventSelected"] = EventCallback.Factory.Create<WharfEventSelection>(this, selection => Dispatcher.Dispatch(new RecordWharfSelection(selection)))
+        };
+    }
+
+    private void ShowCalendar()
+    {
+        _showCalendar = true;
+    }
+}

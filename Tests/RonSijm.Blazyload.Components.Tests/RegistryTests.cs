@@ -175,7 +175,7 @@ public sealed class RegistryTests
     }
 
     [Fact]
-    public async Task ConcurrentResolutionsShareEachComponentTask()
+    public async Task ConcurrentComponentNamesShareOneAssemblyLoad()
     {
         var assemblyName = $"LazyAssembly{Guid.NewGuid():N}";
         var loader = CreateLoader();
@@ -190,7 +190,27 @@ public sealed class RegistryTests
         var results = await Task.WhenAll(requests);
 
         Assert.All(results, descriptor => Assert.NotNull(descriptor.ComponentType));
-        await loader.Received(2).LoadAssemblyAsync($"{assemblyName}.wasm");
+        await loader.Received(1).LoadAssemblyAsync($"{assemblyName}.wasm");
+    }
+
+    [Fact]
+    public async Task SharedAssemblyFailureKeepsEachComponentNameInItsError()
+    {
+        var assemblyName = $"FailedAssembly{Guid.NewGuid():N}";
+        var loader = CreateLoader();
+        var failure = new BlazyAssemblyLoadException(assemblyName, new InvalidOperationException("Fluxor registration failed"));
+        loader.LoadAssemblyAsync($"{assemblyName}.wasm").Returns(Task.FromException<List<Assembly>>(failure));
+        using var context = CreateContext([new("first", assemblyName, "First"), new("second", assemblyName, "Second")], loader);
+        var registry = context.Services.GetRequiredService<IBlazyComponentRegistry>();
+
+        foreach (var name in new[] { "first", "second" })
+        {
+            var exception = await Assert.ThrowsAsync<BlazyComponentLoadException>(async () => await registry.ResolveAsync(name, TestContext.Current.CancellationToken));
+            Assert.Contains(name, exception.Message);
+            Assert.Same(failure, exception.InnerException);
+        }
+
+        await loader.Received(1).LoadAssemblyAsync($"{assemblyName}.wasm");
     }
 
     [Fact]

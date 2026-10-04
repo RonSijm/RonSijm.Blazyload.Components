@@ -1,0 +1,14 @@
+@using RonSijm.Syringe
+@using RonSijm.Demo.Fluxor.BobsBurgers.Redux
+@inherits ViewModelComponent<TraceViewModel>
+
+<section data-testid="fluxor-action-timeline">
+    <h2>The last 15 actions, in this app</h2>
+    <p>Bob's dynamically registered middleware records serializable descriptions of domain, loading and lifecycle actions. Redux DevTools adds state snapshots in Debug builds; this small timeline also works in Release.</p>
+    <ol>
+        @foreach (var entry in ViewModel.Entries)
+        {
+            <li>@entry.Sequence: <code>@entry.Description</code></li>
+        }
+    </ol>
+</section>

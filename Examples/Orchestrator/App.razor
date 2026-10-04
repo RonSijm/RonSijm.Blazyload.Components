@@ -1,8 +1,13 @@
+@using global::Fluxor.Blazor.Web
+
+<StoreInitializer />
+
 <header class="orchestrator-header">
     <NavLink class="orchestrator-brand" href="" Match="NavLinkMatch.All" data-testid="demo-home">Demo orchestrator</NavLink>
     <nav aria-label="Demos">
         <NavLink href="Simple/" data-testid="choose-simple">Simple</NavLink>
         <NavLink href="Extensive/" data-testid="choose-extensive">Extensive</NavLink>
+        <NavLink href="Fluxor/" data-testid="choose-fluxor">Fluxor</NavLink>
     </nav>
     <p>One Blazor runtime. Demos load on demand.</p>
 </header>
@@ -14,7 +19,7 @@
     <NotFound>
         <main class="orchestrator-intro">
             <h1>Demo not found</h1>
-            <p>Choose Simple or Extensive above.</p>
+            <p>Choose Simple, Extensive or Fluxor above.</p>
         </main>
     </NotFound>
 </Router>

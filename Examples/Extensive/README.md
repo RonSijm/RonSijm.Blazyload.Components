@@ -6,6 +6,8 @@ The live site uses the [shared orchestrator](../README.md#what-does-the-orchestr
 
 This is the fuller example, including generated component names, exported models, feature services and static assets. For composition with as few changes and dependencies as possible, start with [Simple](../Simple/README.md). Neither the storefront nor the source-generator package is required to render a component by name.
 
+For a feature that also brings its own shared state, actions, reducers, effects and middleware, see [Fluxor](../Fluxor/README.md). It is a separate third example, not an extra dependency of this demo's standalone host or feature libraries.
+
 ## What's being composed?
 
 Bob's Burgers is the **consumer**: the feature displaying another feature's UI. Wonder Wharf is the **producer**: the feature implementing that UI. The **host** is the runnable Blazor WebAssembly app, which starts .NET in the browser and publishes the files for both features.
