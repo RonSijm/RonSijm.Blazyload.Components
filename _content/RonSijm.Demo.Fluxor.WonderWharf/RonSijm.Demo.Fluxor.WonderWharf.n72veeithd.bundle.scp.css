@@ -1,0 +1,63 @@
+/* _content/RonSijm.Demo.Fluxor.WonderWharf/Components/EventCalendar.razor.rz.scp.css */
+.fluxor-calendar[b-p5rc93wuri] {
+    padding: 1.5rem;
+    border: 3px solid #227169;
+    border-radius: .75rem;
+    background: var(--fluxor-panel, #fff);
+}
+
+.eyebrow[b-p5rc93wuri] {
+    color: var(--fluxor-muted, #227169);
+    font-weight: 700;
+}
+
+pre[b-p5rc93wuri] {
+    padding: 1rem;
+    background: var(--fluxor-soft, #f3f6f5);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+ul[b-p5rc93wuri] {
+    padding: 0;
+    list-style: none;
+}
+
+li[b-p5rc93wuri] {
+    margin: .75rem 0;
+}
+
+button[b-p5rc93wuri] {
+    padding: .65rem 1rem;
+    border: 1px solid #227169;
+    border-radius: .3rem;
+    background: var(--fluxor-soft, #eff8f5);
+    color: var(--fluxor-ink, #173e39);
+    text-align: left;
+}
+
+button[aria-pressed="true"][b-p5rc93wuri] {
+    background: #173e39;
+    color: white;
+}
+
+.buttons[b-p5rc93wuri] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+[role="alert"][b-p5rc93wuri] {
+    padding: 1rem;
+    border-left: 3px solid #a32623;
+    background: #fff0ef;
+    color: #6b1818;
+}
+/* _content/RonSijm.Demo.Fluxor.WonderWharf/Components/FeatureSummary.razor.rz.scp.css */
+aside[b-1j95bodye8] {
+    padding: 1rem;
+    border: 1px solid #227169;
+    border-radius: .75rem;
+    background: var(--fluxor-soft, #eff8f5);
+    overflow-wrap: anywhere;
+}

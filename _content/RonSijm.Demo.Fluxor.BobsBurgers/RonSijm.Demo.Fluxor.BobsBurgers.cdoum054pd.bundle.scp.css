@@ -1,0 +1,173 @@
+/* _content/RonSijm.Demo.Fluxor.BobsBurgers/Components/DemoCommands.razor.rz.scp.css */
+.demo-commands[b-fr2a1qnnkw] {
+    margin-top: 1rem;
+}
+
+button[b-fr2a1qnnkw] {
+    padding: .6rem .9rem;
+    margin: 0 .5rem .5rem 0;
+    border: 1px solid var(--fluxor-muted);
+    border-radius: .3rem;
+    background: var(--fluxor-soft);
+    color: var(--fluxor-ink);
+}
+
+code[b-fr2a1qnnkw] {
+    overflow-wrap: anywhere;
+}
+/* _content/RonSijm.Demo.Fluxor.BobsBurgers/Components/RestaurantDashboard.razor.rz.scp.css */
+.fluxor-demo[b-xutrysajtc] {
+    max-width: 70rem;
+    margin: 0 auto;
+    padding: 2rem 1.25rem;
+    line-height: 1.6;
+}
+
+header[b-xutrysajtc] {
+    max-width: 56rem;
+}
+
+h1[b-xutrysajtc] {
+    margin: .5rem 0;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.1;
+}
+
+.eyebrow[b-xutrysajtc] {
+    color: var(--fluxor-muted, #227169);
+    font-weight: 700;
+}
+
+pre[b-xutrysajtc] {
+    padding: 1rem;
+    border-radius: .4rem;
+    background: #29221e;
+    color: #fff7e9;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+code[b-xutrysajtc],
+strong[b-xutrysajtc] {
+    overflow-wrap: anywhere;
+}
+
+button[b-xutrysajtc] {
+    padding: .75rem 1rem;
+    border: 1px solid #227169;
+    border-radius: .3rem;
+    background: #173e39;
+    color: white;
+}
+
+.buttons[b-xutrysajtc] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.diagnostics[b-xutrysajtc] {
+    margin: 2rem 0;
+    padding: 1.25rem;
+    border: 1px solid #d8c8b6;
+    border-radius: .75rem;
+    background: var(--fluxor-panel, white);
+}
+
+.diagnostics p[b-xutrysajtc] {
+    margin: .5rem 0;
+}
+
+.producer-components[b-xutrysajtc] {
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+}
+
+section[b-xutrysajtc] {
+    margin-top: 2rem;
+}
+
+a[b-xutrysajtc] {
+    color: var(--fluxor-link, #a32623);
+}
+
+.demo-mindset[b-xutrysajtc],
+.preload-controls[b-xutrysajtc] {
+    padding: 1rem;
+    border-left: 3px solid var(--fluxor-muted, #227169);
+    background: var(--fluxor-soft, #eff8f5);
+}
+
+.preload-controls[b-xutrysajtc] {
+    margin-top: 1.5rem;
+}
+
+.library-grid[b-xutrysajtc] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+.library-grid article[b-xutrysajtc] {
+    padding: 1.25rem;
+    border: 1px solid var(--fluxor-muted, #227169);
+    border-radius: .5rem;
+    background: var(--fluxor-panel, white);
+    overflow-wrap: anywhere;
+}
+
+.library-grid ul[b-xutrysajtc] {
+    padding-left: 1.25rem;
+}
+
+@media (max-width: 760px) {
+    .producer-components[b-xutrysajtc],
+    .library-grid[b-xutrysajtc] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+/* _content/RonSijm.Demo.Fluxor.BobsBurgers/Components/RestaurantLayout.razor.rz.scp.css */
+.restaurant-shell[b-8wmceswkky] {
+    --fluxor-panel: #fff;
+    --fluxor-soft: #eff8f5;
+    --fluxor-ink: #29221e;
+    --fluxor-muted: #227169;
+    --fluxor-link: #a32623;
+    background: #fff7e9;
+    color: var(--fluxor-ink);
+}
+
+.restaurant-shell[data-theme="dark"][b-8wmceswkky] {
+    --fluxor-panel: #203a34;
+    --fluxor-soft: #244a40;
+    --fluxor-ink: #edf7f1;
+    --fluxor-muted: #7fcabb;
+    --fluxor-link: #ffae9a;
+    background: #142420;
+}
+
+.shell-header[b-8wmceswkky] {
+    max-width: 70rem;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid var(--fluxor-muted);
+    line-height: 1.6;
+}
+
+.shell-values[b-8wmceswkky] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem 2rem;
+}
+
+pre[b-8wmceswkky] {
+    padding: 1rem;
+    background: var(--fluxor-soft);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+code[b-8wmceswkky] {
+    overflow-wrap: anywhere;
+}

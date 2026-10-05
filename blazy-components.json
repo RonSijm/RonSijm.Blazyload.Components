@@ -1,0 +1,44 @@
+{
+  "components": {
+    "bobsburgers.burger-of-the-day": {
+      "assembly": "RonSijm.Demo.BobsBurgers",
+      "type": "RonSijm.Demo.BobsBurgers.Components.BurgerOfTheDay"
+    },
+    "bobsburgers.dashboard": {
+      "assembly": "RonSijm.Demo.BobsBurgers",
+      "type": "RonSijm.Demo.BobsBurgers.Components.RestaurantDashboard"
+    },
+    "burger.editor": {
+      "assembly": "RonSijm.Demo.Blazyload.Components.Burger",
+      "type": "RonSijm.Demo.Blazyload.Components.Burger.Components.BurgerPage"
+    },
+    "fluxor.bobsburgers.dashboard": {
+      "assembly": "RonSijm.Demo.Fluxor.BobsBurgers",
+      "type": "RonSijm.Demo.Fluxor.BobsBurgers.Components.RestaurantDashboard"
+    },
+    "fluxor.wonderwharf.events": {
+      "assembly": "RonSijm.Demo.Fluxor.WonderWharf",
+      "type": "RonSijm.Demo.Fluxor.WonderWharf.Components.EventCalendar"
+    },
+    "fluxor.wonderwharf.publications": {
+      "assembly": "RonSijm.Demo.Fluxor.WonderWharf.Publications",
+      "type": "RonSijm.Demo.Fluxor.WonderWharf.Publications.Components.PublicationTracking"
+    },
+    "fluxor.wonderwharf.summary": {
+      "assembly": "RonSijm.Demo.Fluxor.WonderWharf",
+      "type": "RonSijm.Demo.Fluxor.WonderWharf.Components.FeatureSummary"
+    },
+    "pizza.calendar": {
+      "assembly": "RonSijm.Demo.Blazyload.Components.Pizza",
+      "type": "RonSijm.Demo.Blazyload.Components.Pizza.Components.PizzaCalendar"
+    },
+    "wonderwharf.events": {
+      "assembly": "RonSijm.Demo.WonderWharf",
+      "type": "RonSijm.Demo.WonderWharf.Components.EventCalendar"
+    },
+    "wonderwharf.rides": {
+      "assembly": "RonSijm.Demo.WonderWharf",
+      "type": "RonSijm.Demo.WonderWharf.Components.RideSchedule"
+    }
+  }
+}

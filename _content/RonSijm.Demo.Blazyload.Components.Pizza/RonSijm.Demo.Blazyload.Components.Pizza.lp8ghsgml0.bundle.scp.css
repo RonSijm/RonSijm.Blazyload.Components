@@ -1,0 +1,19 @@
+/* _content/RonSijm.Demo.Blazyload.Components.Pizza/Components/PizzaCalendar.razor.rz.scp.css */
+.pizza-calendar[b-yzziyd5gf4] {
+    border: 3px solid rgb(180, 40, 20);
+    padding: 1rem;
+    overflow-wrap: anywhere;
+}
+
+.pizza-calendar img[b-yzziyd5gf4] {
+    width: 48px;
+}
+
+.simple-code[b-yzziyd5gf4] {
+    padding: .75rem;
+    border: 1px solid #ccc;
+    border-radius: .25rem;
+    background: #f6f8fa;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

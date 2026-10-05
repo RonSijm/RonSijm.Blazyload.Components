@@ -1,0 +1,135 @@
+/* _content/RonSijm.Demo.WonderWharf/Components/EventCalendar.razor.rz.scp.css */
+.event-calendar[b-n52vhu3sb6] {
+    min-width: 0;
+    padding: 2rem;
+    border: 3px solid #b53a2b;
+    border-radius: 12px;
+    background: #fffdf7;
+    color: #29221e;
+    line-height: 1.7;
+}
+
+h2[b-n52vhu3sb6] {
+    margin-top: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.8rem;
+}
+
+.component-label[b-n52vhu3sb6] {
+    margin-top: 0;
+    color: #b53a2b;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+code[b-n52vhu3sb6] {
+    overflow-wrap: anywhere;
+}
+
+ul[b-n52vhu3sb6] {
+    padding: 0;
+    list-style: none;
+}
+
+li[b-n52vhu3sb6] {
+    padding-block: 1rem;
+    border-bottom: 1px solid #e5d7be;
+    font-weight: 600;
+}
+
+.calendar-actions[b-n52vhu3sb6] {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-block: 1.5rem;
+}
+
+.event-calendar img[b-n52vhu3sb6] {
+    width: 48px;
+}
+
+button[b-n52vhu3sb6] {
+    padding: 0.8rem 1rem;
+    border: 0;
+    border-radius: 6px;
+    background: #b53a2b;
+    color: white;
+    font-weight: 700;
+}
+
+button:hover[b-n52vhu3sb6] {
+    background: #8a2b21;
+}
+
+.producer-notes[b-n52vhu3sb6] {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5d7be;
+    font-size: 0.85rem;
+    line-height: 1.7;
+}
+
+.producer-layout[b-n52vhu3sb6] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.5rem;
+}
+
+.producer-layout > div[b-n52vhu3sb6] {
+    min-width: 0;
+}
+
+.asset-result[b-n52vhu3sb6] {
+    padding: 0.8rem 1rem;
+    border-radius: 6px;
+    background: #f1e5cf;
+    font-weight: 600;
+}
+
+pre[b-n52vhu3sb6] {
+    max-width: 100%;
+    padding: 1rem;
+    border-radius: 6px;
+    background: #29221e;
+    color: #fff4dc;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+    .event-calendar[b-n52vhu3sb6] {
+        padding: 1.2rem;
+    }
+
+    .producer-layout[b-n52vhu3sb6] {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+/* _content/RonSijm.Demo.WonderWharf/Components/RideSchedule.razor.rz.scp.css */
+.ride-schedule[b-m3ot1h6x4z] {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    background: #f1e5cf;
+    color: #29221e;
+}
+
+h3[b-m3ot1h6x4z] {
+    margin-top: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.2rem;
+}
+
+pre[b-m3ot1h6x4z], p[b-m3ot1h6x4z] {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+pre[b-m3ot1h6x4z] {
+    white-space: pre-wrap;
+}
+
+code[b-m3ot1h6x4z] {
+    overflow-wrap: anywhere;
+}
