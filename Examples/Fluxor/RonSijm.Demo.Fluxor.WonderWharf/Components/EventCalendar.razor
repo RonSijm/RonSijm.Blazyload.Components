@@ -31,7 +31,7 @@
         <button data-testid="fluxor-broadcast" disabled="@(ViewModel.SelectedEventId is null)" @onclick="() => Dispatcher.Dispatch(new PublishSelectedWharfEvent())">Publish selected event to the application</button>
     </div>
     <p>Selection dispatches a private <code>SelectWharfEvent</code> action here, then invokes an ordinary <code>EventCallback&lt;WharfEventSelection&gt;</code> for the parent. Fluxor does not replace the component contract.</p>
-    <p>The separate publish button uses a property-injected effect to dispatch the exported <code>WharfEventSelected</code> action. Any interested domain can handle that public message without injecting Wonder Wharf's private state.</p>
+    <p>The separate publish button uses a lazy <code>[EffectMethod]</code> with property-injected state to dispatch the exported <code>WharfEventSelected</code> action. Its wrapper joins the running store when this feature loads, not during host startup. Any interested domain can handle the public message without injecting Wonder Wharf's private state.</p>
 </section>
 
 @code {

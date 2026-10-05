@@ -195,49 +195,73 @@ You could also request `<BlazyComponent Name="wonderwharf.rides" />` directly fr
 
 ### How do they interact?
 
-This diagram describes the **standalone Extensive host**. Its references determine what can be built and published; its lazy-load settings determine when assemblies reach the browser. The shared orchestrator uses the same features but waits until you choose Extensive before requesting Bob's Burgers and its contracts.
+These diagrams describe the **standalone Extensive host**. Its references determine what can be built and published; its lazy-load settings determine when assemblies reach the browser. The shared orchestrator uses the same features but waits until you choose Extensive before requesting Bob's Burgers and its contracts.
 
-Dashed arrows are references between compiled libraries. Solid arrows show the contracts build and the runtime requests, rendering, service use and callbacks:
+Build/deployment references and runtime interaction are shown separately, so project dependencies don't get mixed into the loading flow. Named regions distinguish the host, consumer, producer and shared tooling.
+
+#### Build and deployment
+
+Dashed arrows are references between compiled libraries. Solid arrows show how the optional tooling exports contracts.
 
 ```mermaid
 flowchart TB
     host["WebAssembly host"]
-    runtime["BlazyComponent<br/>Components + Blazyload"]
-    catalog["blazy-components.json<br/>Name-to-type catalog"]
-    contracts["Generated WonderWharf.Contracts<br/>WonderWharfComponents + EventCalendarModel"]
-    exporter["SourceGenerator + MSBuild<br/>Names + marked model extraction"]
-    service["WonderWharf.Services<br/>WharfEventService"]
+    restaurant["Bob's Burgers<br/>Consumer library"]
 
-    subgraph restaurant["RonSijm.Demo.BobsBurgers"]
-        dashboard["RestaurantDashboard"]
-        burger["BurgerOfTheDay"]
-        dashboard -->|"Render local component"| burger
+    subgraph producer_build["Wonder Wharf implementation"]
+        wharf["WonderWharf<br/>Producer library"]
+        service["WonderWharf.Services<br/>WharfEventService"]
+        wharf -.->|"Implementation dependency"| service
     end
 
-    subgraph wharf["RonSijm.Demo.WonderWharf"]
-        events["EventCalendar"]
-        rides["RideSchedule"]
-        bootstrap["BlazyBootstrap"]
-        events -->|"Render local component"| rides
+    subgraph public_contract["Shared contracts build"]
+        exporter["SourceGenerator + MSBuild<br/>Names + marked model extraction"]
+        contracts["Generated WonderWharf.Contracts<br/>Names + EventCalendarModel"]
+        exporter -->|"Build contracts; forward model types"| contracts
     end
 
     host -.->|"Reference for deployment"| restaurant
     host -.->|"Reference for deployment"| wharf
     host -.->|"Publish contracts; load at startup"| contracts
-    dashboard -.->|"Reference shared model"| contracts
-    events -.->|"Reference shared model"| contracts
-    wharf -.->|"Reference implementation dependency"| service
+    restaurant -.->|"Reference shared model"| contracts
+    wharf -.->|"Reference shared model"| contracts
     wharf -->|"Component attributes + BlazyContract source"| exporter
-    exporter -->|"Build contracts; producer forwards model types"| contracts
+```
 
-    host -->|"bobsburgers.dashboard at startup"| runtime
+#### Runtime interaction
+
+Solid arrows show requests, rendering, service registration/use and callbacks inside the running Blazor app.
+
+```mermaid
+flowchart TB
+    subgraph host_loading["Host and named component loading"]
+        host["WebAssembly host"]
+        runtime["BlazyComponent<br/>Components + Blazyload"]
+        catalog["blazy-components.json<br/>Name-to-type catalog"]
+        host -->|"bobsburgers.dashboard at startup"| runtime
+        runtime -->|"Look up names"| catalog
+    end
+
+    subgraph restaurant["Consumer: Bob's Burgers"]
+        dashboard["RestaurantDashboard"]
+        burger["BurgerOfTheDay"]
+        dashboard -->|"Render local component"| burger
+    end
+
+    subgraph wharf["Producer: Wonder Wharf"]
+        events["EventCalendar"]
+        rides["RideSchedule"]
+        bootstrap["BlazyBootstrap"]
+        service["WharfEventService"]
+        events -->|"Render local component"| rides
+        bootstrap -->|"Register in DI"| service
+        events -->|"Inject service and get events"| service
+    end
+
     dashboard -->|"wonderwharf.events + parameters on click"| runtime
-    runtime -->|"Look up names"| catalog
     runtime -->|"Load and render dashboard"| dashboard
     runtime -->|"Load and render calendar"| events
     runtime -->|"Run after loading Wonder Wharf"| bootstrap
-    bootstrap -->|"Register in DI"| service
-    events -->|"Inject service and get events"| service
     events -->|"DateSelected callback"| dashboard
 ```
 

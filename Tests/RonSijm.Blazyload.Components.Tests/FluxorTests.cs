@@ -16,11 +16,15 @@ using RonSijm.Demo.Fluxor.Diagnostics;
 using RonSijm.Demo.Fluxor.WonderWharf.Components;
 using RonSijm.Demo.Fluxor.WonderWharf.Contracts;
 using RonSijm.Demo.Fluxor.WonderWharf.Models;
+using RonSijm.Demo.Fluxor.WonderWharf.Publications.Components;
+using RonSijm.Demo.Fluxor.WonderWharf.Publications.Redux;
+using RonSijm.Demo.Fluxor.WonderWharf.Publications.Services;
 using RonSijm.Demo.Fluxor.WonderWharf.Redux;
 using RonSijm.Demo.Fluxor.WonderWharf.Services;
 using RonSijm.Syringe;
 using RonSijm.Syringe.Models;
 using WharfBootstrap = RonSijm.Demo.Fluxor.WonderWharf.Properties.BlazyBootstrap;
+using TrackingBootstrap = RonSijm.Demo.Fluxor.WonderWharf.Publications.Properties.BlazyBootstrap;
 using BobBootstrap = RonSijm.Demo.Fluxor.BobsBurgers.Properties.BlazyBootstrap;
 using RestaurantDashboard = RonSijm.Demo.Fluxor.BobsBurgers.Components.RestaurantDashboard;
 using TestContext = Xunit.TestContext;
@@ -81,8 +85,23 @@ public sealed class FluxorTests
         Assert.Equal(1, provider.GetRequiredService<WharfEventService>().RequestCount);
 
         await provider.LoadServiceDescriptors(featureServices);
-        var duplicate = Assert.Throws<ArgumentException>(provider.Build);
-        Assert.Contains("Fluxor.WonderWharf", duplicate.Message);
+        provider.Build();
+        Assert.Same(store, provider.GetRequiredService<IStore>());
+        Assert.Same(state, provider.GetRequiredService<IState<WonderWharfViewModel>>());
+        Assert.Same(effect, provider.GetRequiredService<LoadWharfEventsEffect>());
+        var refreshed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        state.StateChanged += (_, _) =>
+        {
+            if (state.Value.LoadCount >= 2)
+            {
+                refreshed.TrySetResult();
+            }
+        };
+        dispatcher.Dispatch(new LoadWharfEvents());
+        await refreshed.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Equal(2, state.Value.LoadCount);
+        Assert.Equal(2, provider.GetRequiredService<WharfEventService>().RequestCount);
+        Assert.Equal(2, provider.GetRequiredService<WharfTraceMiddleware>().LoadActionsSeen);
     }
 
     [Fact]
@@ -163,6 +182,7 @@ public sealed class FluxorTests
         Assert.Same(store, context.Services.GetRequiredService<IStore>());
         var wharf = context.Services.GetRequiredService<IState<WonderWharfViewModel>>();
         var selectionEffect = context.Services.GetRequiredService<WharfSelectionEffect>();
+        Assert.False(typeof(IEffect).IsAssignableFrom(selectionEffect.GetType()));
         Assert.Same(wharf, selectionEffect.State);
         dispatcher.Dispatch(new WharfEventsLoaded([new WharfEvent(selection.EventId, selection.Name, selection.Date)]));
         dispatcher.Dispatch(new SelectWharfEvent(selection.EventId));
@@ -181,6 +201,169 @@ public sealed class FluxorTests
         Assert.Equal(selection, shell.Value.Restaurant!.BroadcastEvent);
         Assert.Contains(trace.Value.Entries, entry => entry.Description == nameof(WharfEventSelected));
         Assert.Contains("Fall festival", JsonSerializer.Serialize(shell.Value));
+    }
+
+    [Fact]
+    public async Task FeatureCacheMissesDoNotHideALaterLazyFeature()
+    {
+        await using var context = CreateFoundationContext();
+        var store = context.Services.GetRequiredService<IStore>();
+        await store.InitializeAsync();
+        var cache = context.Services.GetRequiredService<FeatureCache>();
+        Assert.Null(cache.GetFeature(new WonderWharfViewModel()));
+        Assert.Null(cache.GetFeature(new WonderWharfViewModel()));
+
+        await AddFeatureAsync(context, await new WharfBootstrap().Bootstrap());
+        Assert.Same(store.Features["Fluxor.WonderWharf"], cache.GetFeature(new WonderWharfViewModel()));
+        context.Services.GetRequiredService<IDispatcher>().Dispatch(new WonderWharfViewModel { HasLoaded = true, LoadCount = 4 });
+        Assert.Equal(4, context.Services.GetRequiredService<IState<WonderWharfViewModel>>().Value.LoadCount);
+    }
+
+    [Fact]
+    public async Task FailedLateRegistrationRollsBackAndRetryAttachesReducersAndBothMethodStylesOnce()
+    {
+        await using var context = CreateFoundationContext();
+        var store = context.Services.GetRequiredService<IStore>();
+        await store.InitializeAsync();
+        await AddFeatureAsync(context, await new BobBootstrap().Bootstrap());
+        await AddFeatureAsync(context, await new WharfBootstrap().Bootstrap());
+        await AddFeatureAsync(context, await new TrackingBootstrap().Bootstrap());
+        var provider = context.Services.GetRequiredService<SyringeServiceProvider>();
+        var dispatcher = provider.GetRequiredService<IDispatcher>();
+        var state = provider.GetRequiredService<IState<WonderWharfViewModel>>();
+        var restaurant = provider.GetRequiredService<IState<RestaurantViewModel>>();
+        var item = new WharfEvent(Guid.NewGuid(), "Fall festival", new DateOnly(2026, 10, 10));
+        dispatcher.Dispatch(new WharfEventsLoaded([item]));
+        dispatcher.Dispatch(new SelectWharfEvent(item.Id));
+        var feature = store.Features["Fluxor.WonderWharf"];
+        var initialState = state.Value;
+        var descriptors = provider.ServiceDescriptors.ToArray();
+        var extension = provider.GetRequiredService<WharfRuntimeExtensions>();
+
+        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => extension.RegisterPublicationTrackingAsync(true));
+        Assert.Contains(nameof(IWharfPublicationCounter), error.Message);
+        Assert.Equal(descriptors, provider.ServiceDescriptors.ToArray());
+        Assert.Same(initialState, state.Value);
+        Assert.Null(provider.GetService<IWharfPublicationCounter>());
+        Assert.DoesNotContain(provider.ServiceDescriptors, descriptor => descriptor.ServiceType == typeof(WharfPublicationTrackingEffects));
+        dispatcher.Dispatch(new PublishSelectedWharfEvent());
+        Assert.Equal(1, restaurant.Value.PublicEventCount);
+        Assert.Equal(0, state.Value.PublicationCount);
+        Assert.Equal(0, state.Value.PublicationAuditCount);
+
+        await extension.RegisterPublicationTrackingAsync();
+        Assert.True(state.Value.IsPublicationTrackingEnabled);
+        Assert.Same(feature, store.Features["Fluxor.WonderWharf"]);
+        Assert.Same(store, provider.GetRequiredService<IStore>());
+        Assert.Same(state, provider.GetRequiredService<IState<WonderWharfViewModel>>());
+        var counter = provider.GetRequiredService<IWharfPublicationCounter>();
+        Assert.Same(counter, provider.GetRequiredService<WharfPublicationTrackingEffects>().Counter);
+        dispatcher.Dispatch(new PublishSelectedWharfEvent());
+        Assert.Equal(1, state.Value.PublicationCount);
+        Assert.Equal(1, state.Value.PublicationAuditCount);
+        Assert.Equal(1, counter.Calls);
+        Assert.Equal(2, restaurant.Value.PublicEventCount);
+
+        await extension.RegisterPublicationTrackingAsync();
+        dispatcher.Dispatch(new PublishSelectedWharfEvent());
+        Assert.Equal(2, state.Value.PublicationCount);
+        Assert.Equal(2, state.Value.PublicationAuditCount);
+        Assert.Equal(2, counter.Calls);
+        Assert.Equal(3, restaurant.Value.PublicEventCount);
+        Assert.Same(counter, provider.GetRequiredService<IWharfPublicationCounter>());
+        Assert.Equal(item.Id, state.Value.SelectedEventId);
+        Assert.Equal(1, state.Value.LoadCount);
+    }
+
+    [Fact]
+    public async Task OptionalRegistrationFailureIsVisibleAndTheComponentCanRetry()
+    {
+        await using var context = CreateFoundationContext();
+        await context.Services.GetRequiredService<IStore>().InitializeAsync();
+        await AddFeatureAsync(context, await new WharfBootstrap().Bootstrap());
+        await AddFeatureAsync(context, await new TrackingBootstrap().Bootstrap());
+        var panel = context.Render<PublicationTracking>();
+        panel.Find("[data-testid=fluxor-tracking-fail]").Click();
+        panel.WaitForAssertion(() => Assert.Contains(nameof(IWharfPublicationCounter), panel.Find("[data-testid=fluxor-registration-error]").TextContent));
+        Assert.Equal("Not attached", panel.Find("[data-testid=fluxor-tracking-status]").TextContent);
+        panel.Find("[data-testid=fluxor-tracking-enable]").Click();
+        panel.WaitForAssertion(() => Assert.Equal("Attached", panel.Find("[data-testid=fluxor-tracking-status]").TextContent));
+        Assert.Empty(panel.FindAll("[data-testid=fluxor-registration-error]"));
+        Assert.True(panel.Find("[data-testid=fluxor-tracking-fail]").HasAttribute("disabled"));
+        panel.Find("[data-testid=fluxor-tracking-repeat]").Click();
+        Assert.Equal("0", panel.Find("[data-testid=fluxor-publication-count]").TextContent);
+    }
+
+    [Theory]
+    [InlineData(StoreLifetime.Singleton)]
+    [InlineData(StoreLifetime.Scoped)]
+    public async Task TypedNativeConfigurationHonorsLifetimesAndUpdatesExistingAndFutureStores(StoreLifetime lifetime)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(new HttpClient(new EventHandler()) { BaseAddress = new Uri("https://localhost/") });
+        SyringeFluxorOptions.NativeExtensionConfiguration configureStore = native =>
+        {
+            native.WithLifetime(lifetime);
+            native.ScanTypes(typeof(StartupState));
+        };
+        await using var provider = new SyringeServiceProvider(services, options =>
+        {
+            options.ValidateScopes = true;
+            options.UseFluxor(fluxor => fluxor.AddNativeExtension(configureStore));
+        });
+        await using var first = provider.CreateAsyncScope();
+        await using var second = provider.CreateAsyncScope();
+        var firstStore = first.ServiceProvider.GetRequiredService<IStore>();
+        var secondStore = second.ServiceProvider.GetRequiredService<IStore>();
+        await firstStore.InitializeAsync();
+        await secondStore.InitializeAsync();
+        if (lifetime == StoreLifetime.Scoped)
+        {
+            Assert.NotSame(firstStore, secondStore);
+        }
+        else
+        {
+            Assert.Same(firstStore, secondStore);
+        }
+
+        await AddFeatureAsync(provider, await new WharfBootstrap().Bootstrap());
+        await AddFeatureAsync(provider, await new TrackingBootstrap().Bootstrap());
+        await first.ServiceProvider.GetRequiredService<WharfRuntimeExtensions>().RegisterPublicationTrackingAsync();
+        var firstState = first.ServiceProvider.GetRequiredService<IState<WonderWharfViewModel>>();
+        var secondState = second.ServiceProvider.GetRequiredService<IState<WonderWharfViewModel>>();
+        Assert.Same(firstState, first.ServiceProvider.GetRequiredService<WharfSelectionEffect>().State);
+        Assert.Same(secondState, second.ServiceProvider.GetRequiredService<WharfSelectionEffect>().State);
+        var item = new WharfEvent(Guid.NewGuid(), "Fall festival", new DateOnly(2026, 10, 10));
+        var firstDispatcher = first.ServiceProvider.GetRequiredService<IDispatcher>();
+        firstDispatcher.Dispatch(new WharfEventsLoaded([item]));
+        firstDispatcher.Dispatch(new SelectWharfEvent(item.Id));
+        firstDispatcher.Dispatch(new PublishSelectedWharfEvent());
+        Assert.Equal(1, firstState.Value.PublicationCount);
+        Assert.Equal(1, firstState.Value.PublicationAuditCount);
+        Assert.Equal(lifetime == StoreLifetime.Scoped ? 0 : 1, secondState.Value.PublicationCount);
+        Assert.Equal(lifetime == StoreLifetime.Scoped ? 0 : 1, secondState.Value.PublicationAuditCount);
+        var counter = first.ServiceProvider.GetRequiredService<IWharfPublicationCounter>();
+        Assert.Same(counter, second.ServiceProvider.GetRequiredService<IWharfPublicationCounter>());
+        Assert.Equal(1, counter.Calls);
+
+        await using var future = provider.CreateAsyncScope();
+        var futureStore = future.ServiceProvider.GetRequiredService<IStore>();
+        await futureStore.InitializeAsync();
+        var futureState = future.ServiceProvider.GetRequiredService<IState<WonderWharfViewModel>>();
+        Assert.Same(futureState, future.ServiceProvider.GetRequiredService<WharfSelectionEffect>().State);
+        var futureDispatcher = future.ServiceProvider.GetRequiredService<IDispatcher>();
+        futureDispatcher.Dispatch(new WharfEventsLoaded([item]));
+        futureDispatcher.Dispatch(new SelectWharfEvent(item.Id));
+        futureDispatcher.Dispatch(new PublishSelectedWharfEvent());
+        Assert.Equal(lifetime == StoreLifetime.Scoped ? 1 : 2, futureState.Value.PublicationCount);
+        Assert.Equal(2, futureState.Value.PublicationAuditCount);
+        Assert.Equal(lifetime == StoreLifetime.Scoped ? 1 : 2, firstState.Value.PublicationCount);
+        Assert.Equal(lifetime == StoreLifetime.Scoped ? 1 : 2, firstState.Value.PublicationAuditCount);
+        Assert.Same(counter, future.ServiceProvider.GetRequiredService<IWharfPublicationCounter>());
+        Assert.Equal(2, counter.Calls);
+        Assert.Same(firstStore, first.ServiceProvider.GetRequiredService<IStore>());
+        Assert.Same(secondStore, second.ServiceProvider.GetRequiredService<IStore>());
     }
 
     [Fact]
@@ -339,9 +522,13 @@ public sealed class FluxorTests
         return context;
     }
 
-    private static async Task AddFeatureAsync(BunitContext context, IEnumerable<ServiceDescriptor> descriptors)
+    private static Task AddFeatureAsync(BunitContext context, IEnumerable<ServiceDescriptor> descriptors)
     {
-        var provider = context.Services.GetRequiredService<SyringeServiceProvider>();
+        return AddFeatureAsync(context.Services.GetRequiredService<SyringeServiceProvider>(), descriptors);
+    }
+
+    private static async Task AddFeatureAsync(SyringeServiceProvider provider, IEnumerable<ServiceDescriptor> descriptors)
+    {
         IServiceCollection services = new ServiceCollection();
         foreach (var descriptor in descriptors)
         {

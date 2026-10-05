@@ -38,6 +38,8 @@ dotnet run --project .\RonSijm.Demo.Blazyload.Components.Simple.Host
 
 Both features are deliberately small and ugly. Styling and unrelated application code aren't the point.
 
+The live page displays the consumer request, parameter/callback dictionary, host startup and lazy-publication setting. Loading Pizza reveals its named-component parameters and service bootstrap alongside the working calendar. These are plain, visible code blocks, not extra generator tooling or expandable documentation.
+
 ## What do I have to change?
 
 In your own application, run this in the host project and each feature project that declares or renders named components:
@@ -104,13 +106,27 @@ The **bootstrap** is the code Blazyload calls after a feature loads to register 
 If you only pass primitive values and callbacks, you don't need a model contracts project. If the producer has no injected feature services, you don't need a service project or bootstrap either. The image and JavaScript aren't required for composition; they're here to demonstrate that normal Razor Class Library assets still work.
 
 ```mermaid
-flowchart LR
-    host["WebAssembly host"] -.->|"Publish"| burger["Burger"]
-    host -.->|"Publish; mark lazy"| pizza["Pizza"]
-    burger -->|"pizza.calendar + parameters"| runtime["Components + Blazyload"]
+flowchart TB
+    subgraph host_loading["Host and on-demand loading"]
+        host["WebAssembly host"]
+        runtime["Components + Blazyload"]
+    end
+
+    subgraph features["Independent feature components"]
+        burger["Burger<br/>Consumer"]
+        pizza["Pizza<br/>Producer"]
+    end
+
+    subgraph shared_contract["Shared model, no UI"]
+        contracts["Handwritten Pizza.Contracts"]
+    end
+
+    host -.->|"Publish"| burger
+    host -.->|"Publish; mark lazy"| pizza
+    burger -->|"pizza.calendar + parameters"| runtime
     runtime -->|"Load and render on demand"| pizza
     pizza -->|"DateSelected callback"| burger
-    burger -.->|"Shared model only"| contracts["Handwritten Pizza.Contracts"]
+    burger -.->|"Shared model only"| contracts
     pizza -.->|"Shared model only"| contracts
 ```
 

@@ -11,6 +11,6 @@
     <PackageReference Include="Fluxor" Version="6.11.0" />
     <PackageReference Include="Fluxor.Blazor.Web" Version="6.11.0" />
     <PackageReference Include="RonSijm.Fluxor.Blazor.Web.Extensions" Version="0.0.5" />
-    <PackageReference Include="RonSijm.Syringe.Fluxor" Version="1.0.0" />
+    <PackageReference Include="RonSijm.Syringe.Fluxor" Version="1.1.0" />
   </ItemGroup>
 </Project>

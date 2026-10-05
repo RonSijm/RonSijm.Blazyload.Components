@@ -99,6 +99,17 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
     {
         await Assertions.Expect(page.GetByTestId("open-simple")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30000 });
         await Assertions.Expect(page.Locator("h1")).ToHaveTextAsync("This demo orchestrator is a demo in and of itself. It uses one Blazor runtime.");
+        await Assertions.Expect(page.GetByTestId("orchestrator-explanation")).ToContainTextAsync("Switching demos replaces the displayed UI, not the shared application.");
+        await Assertions.Expect(page.GetByTestId("orchestrator-router-code")).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByTestId("orchestrator-router-code")).ToContainTextAsync("<RouteView RouteData=\"@routeData\" />");
+        await Assertions.Expect(page.GetByTestId("orchestrator-routing-code")).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByTestId("orchestrator-routing-code")).ToContainTextAsync("@page \"/{Demo?}\"");
+        foreach (var (route, name) in new[] { ("Simple", "burger.editor"), ("Extensive", "bobsburgers.dashboard"), ("Fluxor", "fluxor.bobsburgers.dashboard") })
+        {
+            await Assertions.Expect(page.GetByTestId("orchestrator-router-code")).ToContainTextAsync($"<NavLink href=\"{route}/\">");
+            await Assertions.Expect(page.GetByTestId("orchestrator-routing-code")).ToContainTextAsync($"case \"{route.ToLowerInvariant()}\":");
+            await Assertions.Expect(page.GetByTestId("orchestrator-routing-code")).ToContainTextAsync($"<BlazyComponent Name=\"{name}\" />");
+        }
         var lazyAssemblies = new[]
         {
             "RonSijm.Demo.Blazyload.Components.Burger",
@@ -111,6 +122,7 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
             "RonSijm.Demo.WonderWharf.Services",
             "RonSijm.Demo.Fluxor.BobsBurgers",
             "RonSijm.Demo.Fluxor.WonderWharf",
+            "RonSijm.Demo.Fluxor.WonderWharf.Publications",
             "RonSijm.Demo.Fluxor.WonderWharf.Contracts",
             "RonSijm.Fluxor.Blazor.Web.Extensions",
             "System.Net.Http.Json"
@@ -123,6 +135,8 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
         foreach (var width in new[] { 390, 320 })
         {
             await page.SetViewportSizeAsync(width, 844);
+            await Assertions.Expect(page.GetByTestId("orchestrator-router-code")).ToBeVisibleAsync();
+            await Assertions.Expect(page.GetByTestId("orchestrator-routing-code")).ToBeVisibleAsync();
             Assert.True(await page.EvaluateAsync<bool>("document.documentElement.scrollWidth <= window.innerWidth"), $"The orchestrator must not overflow horizontally at {width}px.");
         }
         await page.SetViewportSizeAsync(1280, 900);
@@ -246,6 +260,7 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
         await Assertions.Expect(page.GetByTestId("fluxor-assembly-status")).ToHaveTextAsync("Not loaded");
         await Assertions.Expect(page.GetByTestId("fluxor-calendar")).ToHaveCountAsync(0);
         Assert.DoesNotContain(requests, url => IsAssembly(url, "RonSijm.Demo.Fluxor.WonderWharf"));
+        Assert.DoesNotContain(requests, url => IsAssembly(url, "RonSijm.Demo.Fluxor.WonderWharf.Publications"));
         var storeId = await page.GetByTestId("fluxor-store-id").InnerTextAsync();
         await Assertions.Expect(page.GetByTestId("fluxor-browser-message")).ToHaveTextAsync("Browser module ready: first-render effect completed");
         await Assertions.Expect(page.GetByTestId("fluxor-first-render-count")).ToHaveTextAsync("1");
@@ -310,6 +325,34 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
         await Assertions.Expect(page.GetByTestId("fluxor-public-event-count")).ToHaveTextAsync("1");
         await page.GetByTestId("fluxor-select-event").First.ClickAsync();
 
+        Assert.DoesNotContain(requests, url => IsAssembly(url, "RonSijm.Demo.Fluxor.WonderWharf.Publications"));
+        await page.GetByTestId("fluxor-tracking-load").ClickAsync();
+        await Assertions.Expect(page.GetByTestId("fluxor-tracking-panel")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30000 });
+        await Assertions.Expect(page.GetByTestId("fluxor-tracking-status")).ToHaveTextAsync("Not attached");
+        Assert.Single(requests, url => IsAssembly(url, "RonSijm.Demo.Fluxor.WonderWharf.Publications"));
+        await page.GetByTestId("fluxor-tracking-fail").ClickAsync();
+        await Assertions.Expect(page.GetByTestId("fluxor-registration-error")).ToContainTextAsync("WharfPublicationCounter");
+        await Assertions.Expect(page.GetByTestId("fluxor-tracking-status")).ToHaveTextAsync("Not attached");
+        await Assertions.Expect(page.GetByTestId("fluxor-store-id")).ToHaveTextAsync(storeId);
+        await Assertions.Expect(page.GetByTestId("fluxor-wharf-selection")).ToHaveTextAsync("Fall festival");
+        await page.GetByTestId("fluxor-broadcast").ClickAsync();
+        await Assertions.Expect(page.GetByTestId("fluxor-public-event-count")).ToHaveTextAsync("2");
+        await Assertions.Expect(page.GetByTestId("fluxor-publication-count")).ToHaveTextAsync("0");
+        await Assertions.Expect(page.GetByTestId("fluxor-publication-audit-count")).ToHaveTextAsync("0");
+        await page.GetByTestId("fluxor-tracking-enable").ClickAsync();
+        await Assertions.Expect(page.GetByTestId("fluxor-tracking-status")).ToHaveTextAsync("Attached");
+        await Assertions.Expect(page.GetByTestId("fluxor-registration-error")).ToHaveCountAsync(0);
+        await page.GetByTestId("fluxor-broadcast").ClickAsync();
+        await Assertions.Expect(page.GetByTestId("fluxor-public-event-count")).ToHaveTextAsync("3");
+        await Assertions.Expect(page.GetByTestId("fluxor-publication-count")).ToHaveTextAsync("1");
+        await Assertions.Expect(page.GetByTestId("fluxor-publication-audit-count")).ToHaveTextAsync("1");
+        await page.GetByTestId("fluxor-tracking-repeat").ClickAsync();
+        await page.GetByTestId("fluxor-broadcast").ClickAsync();
+        await Assertions.Expect(page.GetByTestId("fluxor-public-event-count")).ToHaveTextAsync("4");
+        await Assertions.Expect(page.GetByTestId("fluxor-publication-count")).ToHaveTextAsync("2");
+        await Assertions.Expect(page.GetByTestId("fluxor-publication-audit-count")).ToHaveTextAsync("2");
+        await Assertions.Expect(page.GetByTestId("fluxor-store-id")).ToHaveTextAsync(storeId);
+
         await page.GetByTestId("fluxor-hide").ClickAsync();
         await Assertions.Expect(page.GetByTestId("fluxor-calendar")).ToHaveCountAsync(0);
         await Assertions.Expect(page.GetByTestId("fluxor-summary")).ToHaveCountAsync(0);
@@ -318,6 +361,9 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
         await Assertions.Expect(page.GetByTestId("fluxor-wharf-selection")).ToHaveTextAsync("Fall festival");
         await Assertions.Expect(page.GetByTestId("fluxor-load-count")).ToHaveTextAsync("1");
         await Assertions.Expect(page.GetByTestId("fluxor-service-count")).ToHaveTextAsync("1");
+        await Assertions.Expect(page.GetByTestId("fluxor-tracking-status")).ToHaveTextAsync("Attached");
+        await Assertions.Expect(page.GetByTestId("fluxor-publication-count")).ToHaveTextAsync("2");
+        await Assertions.Expect(page.GetByTestId("fluxor-publication-audit-count")).ToHaveTextAsync("2");
 
         await page.GetByTestId("fluxor-fail").ClickAsync();
         await Assertions.Expect(page.GetByTestId("fluxor-error")).ToContainTextAsync("Simulated event-service failure");
@@ -339,6 +385,7 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
         }
         await page.SetViewportSizeAsync(1280, 900);
         Assert.Single(requests, url => IsAssembly(url, "RonSijm.Demo.Fluxor.WonderWharf"));
+        Assert.Single(requests, url => IsAssembly(url, "RonSijm.Demo.Fluxor.WonderWharf.Publications"));
         Assert.Single(requests, url => url.EndsWith("/RonSijm.Demo.Fluxor.BobsBurgers/demo.js", StringComparison.Ordinal));
         await Assertions.Expect(page.GetByTestId("fluxor-browser-error")).ToHaveCountAsync(0);
         Assert.DoesNotContain(requests, url => IsAssembly(url, "RonSijm.Blazyload.Components.SourceGenerator"));
@@ -347,6 +394,9 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
             await page.WaitForFunctionAsync("""
                 () => window.__blazyRedux.actions.some(message =>
                     message.state["Fluxor.WonderWharf"]?.LoadCount === 2 &&
+                    message.state["Fluxor.WonderWharf"]?.PublicationCount === 2 &&
+                    message.state["Fluxor.WonderWharf"]?.PublicationAuditCount === 2 &&
+                    message.state["Fluxor.WonderWharf"]?.IsPublicationTrackingEnabled === true &&
                     message.state["Fluxor.BobsBurgers"]?.SelectedEvent?.Name === "Fall festival" &&
                     message.state["Fluxor.Shell"]?.Preferences?.IsDarkMode === true &&
                     message.state["Fluxor.Shell"]?.Restaurant?.BroadcastEvent?.Name === "Fall festival")
@@ -461,6 +511,11 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
         await Assertions.Expect(page.GetByTestId("show-pizza")).ToBeVisibleAsync(new LocatorAssertionsToBeVisibleOptions { Timeout = 30000 });
         await Assertions.Expect(page.Locator("h1")).ToHaveTextAsync("Burger editor");
         await Assertions.Expect(page.Locator("body")).ToContainTextAsync("minimal changes and dependencies");
+        await Assertions.Expect(page.GetByTestId("simple-consumer-code")).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByTestId("simple-consumer-code")).ToContainTextAsync("<BlazyComponent Name=\"pizza.calendar\" Parameters=\"@_parameters\" />");
+        await Assertions.Expect(page.GetByTestId("simple-parameters-code")).ToContainTextAsync("EventCallback.Factory.Create<DateOnly>");
+        await Assertions.Expect(page.GetByTestId("simple-startup-code")).ToContainTextAsync("builder.UseBlazyload();");
+        await Assertions.Expect(page.GetByTestId("simple-publication-code")).ToContainTextAsync("<BlazorWebAssemblyLazyLoad");
         await Assertions.Expect(page.GetByTestId("pizza-calendar")).ToHaveCountAsync(0);
         Assert.Contains(requests, url => IsAssembly(url, "RonSijm.Demo.Blazyload.Components.Pizza.Contracts"));
         Assert.DoesNotContain(requests, url => IsAssembly(url, "RonSijm.Demo.Blazyload.Components.Pizza"));
@@ -473,8 +528,19 @@ public sealed class PublishedApplicationTests(ITestOutputHelper output)
         await Assertions.Expect(page.GetByTestId("pizza-customer")).ToHaveTextAsync("Burger customer");
         await Assertions.Expect(page.GetByTestId("pizza-dependency")).ToHaveTextAsync("Pizza dependency loaded");
         await Assertions.Expect(page.GetByTestId("pizza-js")).ToHaveTextAsync("Pizza JavaScript loaded");
+        await Assertions.Expect(page.GetByTestId("simple-producer-code")).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByTestId("simple-producer-code")).ToContainTextAsync("@attribute [BlazyComponent(\"pizza.calendar\")]");
+        await Assertions.Expect(page.GetByTestId("simple-bootstrap-code")).ToContainTextAsync("services.AddSingleton<PizzaGreeting>();");
         Assert.Single(requests, url => IsAssembly(url, "RonSijm.Demo.Blazyload.Components.Pizza"));
         Assert.Single(requests, url => IsAssembly(url, "RonSijm.Demo.Blazyload.Components.Pizza.Services"));
+        foreach (var width in new[] { 390, 320 })
+        {
+            await page.SetViewportSizeAsync(width, 844);
+            await Assertions.Expect(page.GetByTestId("simple-consumer-code")).ToBeVisibleAsync();
+            await Assertions.Expect(page.GetByTestId("simple-producer-code")).ToBeVisibleAsync();
+            Assert.True(await page.EvaluateAsync<bool>("document.documentElement.scrollWidth <= window.innerWidth"), $"The Simple code examples must not overflow horizontally at {width}px.");
+        }
+        await page.SetViewportSizeAsync(1280, 900);
         var pizzaRequest = requests.Single(url => IsAssembly(url, "RonSijm.Demo.Blazyload.Components.Pizza"));
         Assert.NotEqual("RonSijm.Demo.Blazyload.Components.Pizza.wasm", Path.GetFileName(new Uri(pizzaRequest).AbsolutePath));
         Assert.Contains(requests, url => url.EndsWith("/blazy-components.json", StringComparison.Ordinal));

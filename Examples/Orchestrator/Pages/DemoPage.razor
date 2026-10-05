@@ -28,6 +28,19 @@
                         <a href="Extensive/" data-testid="open-extensive">Open Extensive demo</a>
                     </article>
                 </div>
+                <section class="orchestrator-explanation" data-testid="orchestrator-explanation">
+                    <h2>How this page orchestrates the three demos</h2>
+                    <p>The shared <code>App.razor</code> owns the menu and Blazor router. Choosing a demo changes the route inside this running app; it does not open another host, iframe or WebAssembly runtime.</p>
+                    <h3>1. Navigate inside the shared application</h3>
+                    <p>These are excerpts from the real host. The navigation links select a route, and <code>RouteView</code> displays the page matched by that route.</p>
+                    <pre class="orchestrator-code" data-testid="orchestrator-router-code"><code>@RouterCode</code></pre>
+                    <h3>2. Choose a demo's entry component by name</h3>
+                    <p><code>DemoPage.razor</code> receives the route's <code>Demo</code> parameter and requests the corresponding entry component. This excerpt shows the three demo branches; the same page also handles this home screen and unknown demo names.</p>
+                    <pre class="orchestrator-code" data-testid="orchestrator-routing-code"><code>@RoutingCode</code></pre>
+                    <h3>3. Load that feature, not another application</h3>
+                    <p><code>BlazyComponent</code> looks up the name in the generated <code>blazy-components.json</code> catalog. Blazyload downloads the required assembly and dependencies, runs its service-registration bootstrap, and Components renders the entry component here. The host's project references publish the features; its lazy-load settings keep their implementations out of startup downloads.</p>
+                    <p>The host does not reference Burger or Bob's Burgers implementation types in this Razor page. Once an entry is displayed, that demo can request its own Pizza or Wonder Wharf components through the same loading services. Switching demos replaces the displayed UI, not the shared application.</p>
+                </section>
                 <h2>Watch what gets loaded</h2>
                 <p>Open DevTools (F12), select <strong>Network</strong>, disable caching and reload. No demo implementation is downloaded yet. Choose a demo, then use its button to load Pizza or Wonder Wharf.</p>
                 <p>Switch demos using the navigation above. Blazor stays running; already-loaded assemblies aren't downloaded again. Component-local fields reset with new component instances. The Fluxor demo's shared store state stays until you refresh the browser.</p>
@@ -60,6 +73,37 @@
 </main>
 
 @code {
+    private const string RouterCode = """
+        <NavLink href="Simple/">Simple</NavLink>
+        <NavLink href="Extensive/">Extensive</NavLink>
+        <NavLink href="Fluxor/">Fluxor</NavLink>
+
+        <Router AppAssembly="@typeof(App).Assembly">
+            <Found Context="routeData">
+                <RouteView RouteData="@routeData" />
+            </Found>
+        </Router>
+        """;
+    private const string RoutingCode = """
+        @page "/{Demo?}"
+
+        @switch (Demo?.ToLowerInvariant())
+        {
+            case "simple":
+                <BlazyComponent Name="burger.editor" />
+                break;
+            case "extensive":
+                <BlazyComponent Name="bobsburgers.dashboard" />
+                break;
+            case "fluxor":
+                <BlazyComponent Name="fluxor.bobsburgers.dashboard" />
+                break;
+        }
+
+        @code {
+            [Parameter] public string? Demo { get; set; }
+        }
+        """;
     [Parameter]
     public string? Demo { get; set; }
 }

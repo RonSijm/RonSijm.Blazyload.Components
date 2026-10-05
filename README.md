@@ -120,58 +120,76 @@ The host configures both runtime packages and publishes the producer's assemblie
 
 The **registry** is the runtime service that looks up those names, requests assembly loading and remembers the resolved types. A **manifest provider** supplies its catalog entries; the default one reads the JSON file. These are implementation details, not services you need to implement for the normal setup.
 
-The diagram separates work done on the developer/build machine from work done in the browser:
+The build and runtime flows are shown separately. Within each diagram, named regions group related responsibilities.
+
+### Build time: catalog and optional contracts
 
 ```mermaid
 flowchart TB
-    subgraph build["Build time"]
-        libraries["Referenced component libraries<br/>BlazyComponentAttribute"]
+    libraries["Referenced component libraries<br/>BlazyComponentAttribute"]
+
+    subgraph catalog_build["Component catalog and trimming"]
         task["Components catalog build task"]
         manifest["blazy-components.json<br/>Name, assembly and type"]
         linker["Trimmer instructions (linker descriptor)<br/>Keep annotated component types"]
-        exports["Optional SourceGenerator + MSBuild<br/>BlazyComponent names and BlazyContract models"]
-        contracts["Generated .Contracts assembly/package<br/>Name constants + shared models"]
-        libraries -->|"Inspect compiled metadata"| task
-        libraries -->|"Export public contracts"| exports
-        exports -->|"Generate and compile"| contracts
         task -->|"Generate catalog"| manifest
         task -->|"Generate trimming rules"| linker
     end
 
-    subgraph browser["Runtime: Blazor WebAssembly"]
+    subgraph contracts_build["Optional shared contracts"]
+        exports["Optional SourceGenerator + MSBuild<br/>BlazyComponent names and BlazyContract models"]
+        contracts["Generated .Contracts assembly/package<br/>Name constants + shared models"]
+        exports -->|"Generate and compile"| contracts
+    end
+
+    libraries -->|"Inspect compiled metadata"| task
+    libraries -->|"Export public contracts"| exports
+```
+
+### Runtime: request, load and render
+
+The catalog and contracts below are the outputs of the build above. Reading them does not run the producer's UI or its build tooling.
+
+```mermaid
+flowchart TB
+    subgraph request["1. Consumer request"]
         consumer["Consumer Razor component"]
-
-        subgraph components["RonSijm.Blazyload.Components"]
-            wrapper["BlazyComponent"]
-            registry["Component registry"]
-            provider["Manifest provider"]
-        end
-
-        subgraph core["RonSijm.Blazyload"]
-            loader["Assembly loader"]
-        end
-
-        assemblies["Feature assembly<br/>and configured dependencies"]
-        bootstrap["Feature bootstrap"]
-        services["Feature services in DI"]
-        renderer["Blazor DynamicComponent"]
-        producer["Producer Razor component"]
-
+        contracts["Generated .Contracts<br/>Names + shared models"]
+        wrapper["BlazyComponent"]
         consumer -->|"Name + Parameters"| wrapper
-        contracts -.->|"Consumer references contracts, not UI"| consumer
-        wrapper -->|"Resolve name"| registry
+        contracts -.->|"Reference contracts, not UI"| consumer
+    end
+
+    subgraph lookup["2. Name lookup: Components"]
+        registry["Component registry"]
+        provider["Manifest provider"]
+        manifest["blazy-components.json"]
         registry -->|"Look up catalog entry"| provider
         provider -->|"Read metadata"| manifest
-        registry -->|"LoadAssemblyAsync"| loader
+    end
+
+    subgraph loading["3. Load and register: Blazyload"]
+        loader["Assembly loader"]
+        assemblies["Feature assembly<br/>+ configured dependencies"]
+        bootstrap["Feature bootstrap"]
+        services["Feature services in DI"]
         loader -->|"Download when needed"| assemblies
         loader -->|"Run bootstrap"| bootstrap
         bootstrap -->|"Register services"| services
-        registry -->|"Return type after loading"| wrapper
-        wrapper -->|"Type + Parameters"| renderer
-        renderer -->|"Render"| producer
-        services -->|"Inject"| producer
-        producer -->|"EventCallback"| consumer
     end
+
+    subgraph rendering["4. Blazor rendering"]
+        renderer["Blazor DynamicComponent"]
+        producer["Producer Razor component"]
+        renderer -->|"Render"| producer
+    end
+
+    wrapper -->|"Resolve name"| registry
+    registry -->|"LoadAssemblyAsync"| loader
+    registry -->|"Return type after loading"| wrapper
+    wrapper -->|"Type + Parameters"| renderer
+    services -->|"Inject"| producer
+    producer -->|"EventCallback"| consumer
 ```
 
 Reading the catalog doesn't load the implementations. The registry waits for assembly loading and bootstrap registration before returning the component type. Manual registrations or a custom manifest provider can supply the catalog entries instead.
@@ -577,21 +595,23 @@ From the repository root, with a .NET 10 SDK:
 dotnet run --project .\Examples\Orchestrator
 ```
 
-The orchestrator is a small host app that chooses which demo to display. It requests `burger.editor`, `bobsburgers.dashboard` or `fluxor.bobsburgers.dashboard` through `<BlazyComponent>` to load each demo's first component. All eleven feature assemblies, including shared models, wait until needed.
+The orchestrator is a small host app that chooses which demo to display. It requests `burger.editor`, `bobsburgers.dashboard` or `fluxor.bobsburgers.dashboard` through `<BlazyComponent>` to load each demo's first component. All twelve feature assemblies, including shared models and the optional Fluxor tracking module, wait until needed.
 
 Blazor routing changes the displayed component without loading another HTML document or restarting .NET in the browser. Loaded assemblies and registered services remain available. Component-local fields reset with new instances; the Fluxor demo's store state remains until the browser is refreshed.
 
-**Simple** keeps the original Burger editor. Click **Show pizza calendar**, select a date and change its title. It uses string component names and a tiny handwritten model contract; it doesn't need generated identifiers or a contracts-export pipeline.
+**Simple** keeps the original Burger editor. Click **Show pizza calendar**, select a date and change its title. Visible code blocks explain consumer composition, parameters/callbacks, startup, publication and the producer's service bootstrap. It uses string component names and a tiny handwritten model contract; it doesn't need generated identifiers or a contracts-export pipeline.
 
 **Extensive** uses a sales-site layout to explain component composition. The consumer's Razor request, loading steps and project-reference boundary are visible rather than hidden behind restaurant copy. Click **Load Wonder Wharf component** to load the calendar and its event-service dependency. Use **Send DateSelected callback** and **Update Title parameter** to see ordinary Blazor interaction across the domain boundary.
 
 The loaded calendar shows its producer code, generated model contract and asset results. **Extra tooling** compares the generated contracts with Simple's handwritten version. `BurgerOfTheDay` and `RideSchedule` explain direct rendering within an already-loaded feature. No expandable sections are needed to see what happens.
 
-**Fluxor** keeps that contracts boundary while loading Wonder Wharf's state and behavior with its UI. Two named components share producer state; Bob's layout composes its own restaurant/preferences features. Compare name-based mounting with native assembly/path preloading, callback selection with public application actions, and lifecycle-driven JS with navigation effects. The [setup README](Examples/Fluxor/README.md#benefit-to-working-example) maps each integration benefit to working controls and source files, including current package limitations.
+**Fluxor** keeps that contracts boundary while loading Wonder Wharf's state and behavior with its UI. Two named components share producer state; Bob's layout composes its own restaurant/preferences features. Compare name-based mounting with native assembly/path preloading, callback selection with public application actions, and lifecycle-driven JS with navigation effects. The [setup README](Examples/Fluxor/README.md#benefit-to-working-example) maps each integration benefit to working controls and source files, including lifetime and integration boundaries.
+
+Its optional publication-tracking module demonstrates late reducers and instance/static method effects, an explicit preparation failure, corrected registration retry and repeat registration without duplicate handlers. The ordinary feature and extension retain assembly scanning; this is not a failed-assembly retry.
 
 Open the browser's developer tools (**F12**), select **Network**, enable **Disable cache** and reload before filtering for `WonderWharf`. You can watch the feature assemblies download on demand. In this .NET 10 example the DLLs are delivered as `.wasm` files; a content-based **fingerprint** in the filename lets browsers cache the correct version. The small `WonderWharf.Contracts` assembly loads when you choose Extensive; the implementation and services wait for the storefront's button.
 
-The [example overview](Examples/README.md) explains the orchestrator and includes commands for the standalone hosts. Each demo has its own setup, project-reference explanation and DevTools walkthrough.
+The [orchestrator guide](Examples/Orchestrator/README.md) includes the demo-project diagram and explains the shared host, lazy loading and state lifetimes. The [example overview](Examples/README.md) compares the demos and includes commands for their standalone hosts. Each demo has its own setup, project-reference explanation and DevTools walkthrough.
 
 ## Build, test and package
 
@@ -608,7 +628,7 @@ Packages are written to `packages`. The runtime package includes its MSBuild int
 
 `-nr:false` disables MSBuild worker-process reuse after the command finishes. It isn't a Blazyload setting.
 
-The source uses the Blazyload 2.0.1 NuGet package. No sibling checkout is needed. `global.json` selects a stable .NET 10 SDK.
+The source uses the Blazyload 2.0.2 NuGet package rather than a sibling checkout. When preparing these releases, publish Blazyload first; see the [release order](#github-deployment). `global.json` selects a stable .NET 10 SDK.
 
 Publishing a single example project from a fresh checkout also restores and builds the source-generator tooling it invokes. A prior solution build isn't required.
 
@@ -648,6 +668,8 @@ Run this separately from the unit/rendering tests; it needs the published files.
 
 Add `NUGET_API_KEY` to the repository secrets. For a new package release, update `VersionPrefix` in `BuildSettings\NuGetVersioning.props`; duplicate versions are skipped.
 
+**Release order for Components 1.1.1:** publish the four Syringe 1.1.0 packages first, then Blazyload, Blazyload.Fluxor and Blazyload.Hosting 2.0.2, and finally Components and its SourceGenerator 1.1.1. Components now requires Blazyload 2.0.2, whose dependency minimum brings in Syringe 1.1.0. The Fluxor demo also references Syringe.Fluxor 1.1.0 directly. Publish the Blazyload packages before running this repository's normal restore or CI build; an older published package cannot acquire these new dependency minimums without a new version.
+
 Set **Settings > Pages** to the **gh-pages** branch, root folder. The orchestrator is at <https://ronsijm.github.io/RonSijm.Blazyload.Components/>. `Simple/`, `Extensive/` and `Fluxor/` are routes in that app, with copies of the same host shell for direct links and refreshes.
 
 Deployments replace `gh-pages` with a single-commit snapshot of the current website instead of keeping deployment history. This discards the old history on `gh-pages`, not the source history on `main`.
@@ -655,3 +677,9 @@ Deployments replace `gh-pages` with a single-commit snapshot of the current webs
 The Pages publication adjusts `<base href>` in `index.html`. That setting tells Blazor where the application starts, so relative requests find the assemblies and catalog under the repository subdirectory rather than the website root.
 
 It also creates `.nojekyll` to disable GitHub Pages' Jekyll processing, which otherwise ignores underscore-prefixed directories such as Blazor's `_framework` and `_content`.
+
+## Related Projects
+
+Components is an optional, more opinionated layer on top of Blazyload, not a replacement for it. Use Blazyload directly if you only need assembly loading or prefer a different way of integrating your components.
+
+- **[RonSijm.Blazyload](https://github.com/RonSijm/RonSijm.Blazyload)** - The generic lazy-loading core that loads assemblies and their dependencies and runs their service-registration bootstrap.

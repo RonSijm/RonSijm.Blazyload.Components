@@ -12,9 +12,40 @@
     <p data-testid="pizza-js">@_moduleMessage</p>
     <img alt="Pizza" src="_content/RonSijm.Demo.Blazyload.Components.Pizza/pizza.svg" />
     <button data-testid="select-date" @onclick="SelectDateAsync">Select pizza date</button>
+    <h3>Producer: a named, otherwise ordinary Razor component</h3>
+    <p>The attribute makes this component discoverable by name. Its parameters and callback still use normal Blazor types.</p>
+    <pre class="simple-code" data-testid="simple-producer-code"><code>@ProducerCode</code></pre>
+    <h3>Register the feature's service after loading</h3>
+    <p>Blazyload calls Pizza's bootstrap before rendering the calendar. Burger does not register Pizza's dependency.</p>
+    <pre class="simple-code" data-testid="simple-bootstrap-code"><code>@BootstrapCode</code></pre>
+    <p>The image, JavaScript and this component's scoped CSS are normal Razor Class Library assets under <code>_content/RonSijm.Demo.Blazyload.Components.Pizza/</code>.</p>
 </section>
 
 @code {
+    private const string ProducerCode = """
+        @attribute [BlazyComponent("pizza.calendar")]
+        @inject PizzaGreeting Greeting
+
+        @code {
+            [Parameter] public string Title { get; set; } = "Pizza calendar";
+            [Parameter] public PizzaCalendarModel? Model { get; set; }
+            [Parameter] public EventCallback<DateOnly> DateSelected { get; set; }
+
+            private Task SelectDateAsync() =>
+                DateSelected.InvokeAsync(new DateOnly(2026, 10, 1));
+        }
+        """;
+    private const string BootstrapCode = """
+        public sealed class BlazyBootstrap : IBootstrapper
+        {
+            public Task<IEnumerable<ServiceDescriptor>> Bootstrap()
+            {
+                var services = new ServiceCollection();
+                services.AddSingleton<PizzaGreeting>();
+                return Task.FromResult<IEnumerable<ServiceDescriptor>>(services);
+            }
+        }
+        """;
     [Parameter]
     public string Title { get; set; } = "Pizza calendar";
 

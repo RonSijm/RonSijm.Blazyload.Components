@@ -5,6 +5,8 @@
 
 <h1>Burger editor</h1>
 <p>Simple demo: compose components by name, with minimal changes and dependencies. No source generator or generated contracts are needed.</p>
+<p>Burger asks for a named component, not a Pizza implementation type:</p>
+<pre class="simple-code" data-testid="simple-consumer-code"><code>@ConsumerCode</code></pre>
 <p>
     Open your browser's developer tools (F12), select the <strong>Network</strong> tab, and filter for <code>Pizza</code> before clicking the button below.
     Watch the Pizza assemblies (DLLs) and service dependency load on demand when you click <strong>Show pizza calendar</strong>.
@@ -19,7 +21,44 @@
     <BlazyComponent Name="pizza.calendar" Parameters="@_parameters" />
 }
 
+<section>
+    <h2>Pass ordinary Blazor parameters and a callback</h2>
+    <p>The dictionary keys match the calendar's parameter properties. The model comes from a tiny handwritten contracts project; the callback reports the chosen date to Burger.</p>
+    <pre class="simple-code" data-testid="simple-parameters-code"><code>@ParametersCode</code></pre>
+</section>
+
+<section>
+    <h2>Two startup calls, then publish the producer lazily</h2>
+    <p>Configure the WebAssembly host before <code>builder.Build()</code>. The host references Pizza for deployment; Burger references only Components and the handwritten model.</p>
+    <pre class="simple-code" data-testid="simple-startup-code"><code>@StartupCode</code></pre>
+    <p>In the host project file, mark Pizza's implementation as lazy. The component catalog is generated during the build.</p>
+    <pre class="simple-code" data-testid="simple-publication-code"><code>@PublicationCode</code></pre>
+</section>
+
 @code {
+    private const string ConsumerCode = "<BlazyComponent Name=\"pizza.calendar\" Parameters=\"@_parameters\" />";
+    private const string ParametersCode = """
+        _parameters = new Dictionary<string, object?>
+        {
+            ["Title"] = "Pizza for burgers",
+            ["Model"] = new PizzaCalendarModel("Burger customer"),
+            ["DateSelected"] = EventCallback.Factory.Create<DateOnly>(this, HandleDateSelected)
+        };
+
+        private void HandleDateSelected(DateOnly date)
+        {
+            _selectedDate = date.ToString("yyyy-MM-dd");
+        }
+        """;
+    private const string StartupCode = """
+        builder.UseBlazyload();
+        builder.Services.AddBlazyloadComponents();
+        """;
+    private const string PublicationCode = """
+        <ItemGroup>
+          <BlazorWebAssemblyLazyLoad Include="RonSijm.Demo.Blazyload.Components.Pizza.wasm" />
+        </ItemGroup>
+        """;
     private bool _showPizza;
     private string? _selectedDate;
     private Dictionary<string, object?> _parameters = [];

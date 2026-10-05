@@ -22,11 +22,17 @@ public sealed class SimpleExampleTests
         var component = context.Render<BlazyComponent>(parameters => parameters.Add(value => value.Name, "burger.editor"));
         Assert.Equal("Burger editor", component.Find("h1").TextContent);
         Assert.Contains("minimal changes and dependencies", component.Markup);
+        Assert.Contains("<BlazyComponent Name=\"pizza.calendar\" Parameters=\"@_parameters\" />", component.Find("[data-testid=simple-consumer-code]").TextContent);
+        Assert.Contains("EventCallback.Factory.Create<DateOnly>(this, HandleDateSelected)", component.Find("[data-testid=simple-parameters-code]").TextContent);
+        Assert.Contains("builder.UseBlazyload();", component.Find("[data-testid=simple-startup-code]").TextContent);
+        Assert.Contains("<BlazorWebAssemblyLazyLoad", component.Find("[data-testid=simple-publication-code]").TextContent);
         Assert.Empty(component.FindAll("[data-testid=pizza-calendar]"));
         component.Find("[data-testid=show-pizza]").Click();
         Assert.Equal("Pizza for burgers", component.Find("[data-testid=pizza-calendar] h2").TextContent);
         Assert.Equal("Burger customer", component.Find("[data-testid=pizza-customer]").TextContent);
         Assert.Equal("Pizza dependency loaded", component.Find("[data-testid=pizza-dependency]").TextContent);
+        Assert.Contains("@attribute [BlazyComponent(\"pizza.calendar\")]", component.Find("[data-testid=simple-producer-code]").TextContent);
+        Assert.Contains("services.AddSingleton<PizzaGreeting>();", component.Find("[data-testid=simple-bootstrap-code]").TextContent);
         component.Find("[data-testid=select-date]").Click();
         Assert.Equal("2026-10-01", component.Find("[data-testid=selected-date]").TextContent);
         component.Find("[data-testid=change-title]").Click();

@@ -21,6 +21,7 @@ public static class Program
             options.LoadOnNavigation(WonderWharfFeature.LoadingPath, $"{WonderWharfFeature.AssemblyName}.wasm");
             options.UseFluxor(fluxor =>
             {
+                fluxor.WithLifetime(global::Fluxor.StoreLifetime.Singleton);
                 fluxor.ScanAssemblies(typeof(Program).Assembly);
 #if DEBUG
                 fluxor.AddNativeExtension(native => native.UseReduxDevTools(settings =>

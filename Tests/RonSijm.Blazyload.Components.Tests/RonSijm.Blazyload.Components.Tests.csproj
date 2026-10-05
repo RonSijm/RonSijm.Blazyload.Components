@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\Examples\Simple\RonSijm.Demo.Blazyload.Components.Pizza\RonSijm.Demo.Blazyload.Components.Pizza.csproj" />
     <ProjectReference Include="..\..\Examples\Fluxor\RonSijm.Demo.Fluxor.BobsBurgers\RonSijm.Demo.Fluxor.BobsBurgers.csproj" />
     <ProjectReference Include="..\..\Examples\Fluxor\RonSijm.Demo.Fluxor.WonderWharf\RonSijm.Demo.Fluxor.WonderWharf.csproj" />
+    <ProjectReference Include="..\..\Examples\Fluxor\RonSijm.Demo.Fluxor.WonderWharf.Publications\RonSijm.Demo.Fluxor.WonderWharf.Publications.csproj" />
     <BlazyComponentContractReference Include="..\..\Examples\Fluxor\RonSijm.Demo.Fluxor.WonderWharf\RonSijm.Demo.Fluxor.WonderWharf.csproj" />
   </ItemGroup>
 </Project>

@@ -11,4 +11,15 @@
     <p>Load actions seen by the dynamically registered middleware: <strong data-testid="fluxor-middleware-count">@Trace.LoadActionsSeen</strong></p>
     <p>Selected event ID: <strong data-testid="fluxor-summary-selection">@ViewModel.SelectedEventId</strong></p>
     <p><code>[ReducerMethod]</code> updates loading/results. <code>Reducer&lt;WonderWharfViewModel, SelectWharfEvent&gt;</code> updates selection. Both are attached before the calendar dispatches its first action.</p>
+    <h3>Try an optional extension</h3>
+    <p>Load a separate module to demonstrate late reducers, instance/static method effects and registration failure/retry without replacing this feature or its state.</p>
+    <button data-testid="fluxor-tracking-load" disabled="@(_showTracking || ViewModel.IsPublicationTrackingEnabled)" @onclick="() => _showTracking = true">Load optional publication tracking</button>
+    @if (_showTracking || ViewModel.IsPublicationTrackingEnabled)
+    {
+        <BlazyComponent Name="fluxor.wonderwharf.publications" />
+    }
 </aside>
+
+@code {
+    private bool _showTracking;
+}

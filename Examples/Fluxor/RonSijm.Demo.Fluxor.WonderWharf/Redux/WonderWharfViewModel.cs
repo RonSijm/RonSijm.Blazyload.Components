@@ -14,4 +14,7 @@ public sealed record WonderWharfViewModel : IDispatchOnInitialized
     public string? Error { get; init; }
     public int LoadCount { get; init; }
     public int AttemptCount { get; init; }
+    public bool IsPublicationTrackingEnabled { get; init; }
+    public int PublicationCount { get; init; }
+    public int PublicationAuditCount { get; init; }
 }

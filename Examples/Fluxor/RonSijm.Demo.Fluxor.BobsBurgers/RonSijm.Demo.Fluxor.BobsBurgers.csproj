@@ -10,8 +10,8 @@
     <BlazyComponentContractReference Include="..\RonSijm.Demo.Fluxor.WonderWharf\RonSijm.Demo.Fluxor.WonderWharf.csproj" />
     <PackageReference Include="Fluxor" Version="6.11.0" />
     <PackageReference Include="Fluxor.Blazor.Web" Version="6.11.0" />
-    <PackageReference Include="RonSijm.Blazyload.Fluxor" Version="2.0.1" />
+    <PackageReference Include="RonSijm.Blazyload.Fluxor" Version="2.0.2" />
     <PackageReference Include="RonSijm.Fluxor.Blazor.Web.Extensions" Version="0.0.5" />
-    <PackageReference Include="RonSijm.Syringe.Fluxor" Version="1.0.0" />
+    <PackageReference Include="RonSijm.Syringe.Fluxor" Version="1.1.0" />
   </ItemGroup>
 </Project>

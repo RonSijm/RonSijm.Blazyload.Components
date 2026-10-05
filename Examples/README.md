@@ -4,7 +4,7 @@ Different domains have built their own demos. I want to show them in one Blazor 
 
 Here a **domain** just means a group of related feature code, such as Burger/Pizza or Bob's Burgers/Wonder Wharf. Each demo supplies a component that another app can display.
 
-The **orchestrator** is that app: a small Blazor WebAssembly website with a menu for choosing a demo. WebAssembly runs the .NET application in the browser. Keeping one running app avoids downloading and starting another Blazor runtime when you switch demos.
+The **[orchestrator](Orchestrator/README.md)** is that app: a small Blazor WebAssembly website with a menu for choosing a demo. WebAssembly runs the .NET application in the browser. Keeping one running app avoids downloading and starting another Blazor runtime when you switch demos. Its own guide includes the demo-project diagram and explains loading and state lifetimes.
 
 Run it from the repository root, with a .NET 10 SDK:
 
@@ -12,7 +12,7 @@ Run it from the repository root, with a .NET 10 SDK:
 dotnet run --project .\Examples\Orchestrator
 ```
 
-The [live site](https://ronsijm.github.io/RonSijm.Blazyload.Components/) uses this host. Simple, Extensive and Fluxor are routes in that same app, not separate WebAssembly applications. The new Fluxor route becomes available with the deployment of these changes.
+The [live site](https://ronsijm.github.io/RonSijm.Blazyload.Components/) uses this host. Simple, Extensive and Fluxor are routes in that same app, not separate WebAssembly applications.
 
 ## Choose a demo
 
@@ -22,7 +22,7 @@ All examples compose a component from another library without referencing its im
 
 | Demo | Use case | Setup |
 |---|---|---|
-| [Simple](Simple/README.md) | "I want this composition, but not an over-complicated setup." | The original Burger/Pizza example: component names, ordinary parameters and callbacks. No source generator. |
+| [Simple](Simple/README.md) | "I want this composition, but not an over-complicated setup." | Burger/Pizza: visible consumer/producer code, component names, ordinary parameters and callbacks. No source generator. |
 | [Extensive](Extensive/README.md) | Show how the pieces work together in a larger application. | A technical sales-style page: visible consumer/producer code, generated names and contracts, services, assets and loading steps. |
 | [Fluxor](Fluxor/README.md) | A deliberately over-engineered foundation for a larger stateful application. | Lazy features, generated contracts, state-aware layouts, `[ReduceInto]`, lifecycle/browser/navigation effects, public actions and diagnostics. |
 
@@ -47,7 +47,7 @@ It asks for each demo's first component, called its **entry component**, by name
 <BlazyComponent Name="fluxor.bobsburgers.dashboard" />
 ```
 
-The feature projects compile into **assemblies**: .NET libraries containing their component and service types. The orchestrator includes them in the published website but marks all eleven feature assemblies as **lazy**, so the browser waits to download them until they're needed.
+The feature projects compile into **assemblies**: .NET libraries containing their component and service types. The orchestrator includes them in the published website but marks all twelve feature assemblies as **lazy**, including Fluxor's optional publication-tracking module, so the browser waits to download them until they're needed.
 
 It also defers Fluxor's ViewModel component helper and `System.Net.Http.Json`, used only by the new lazy features. Downloading those dependencies on first use is not restarting the runtime.
 
@@ -68,19 +68,47 @@ Scoped styles are the CSS from files such as `EventCalendar.razor.css`, bundled 
 
 ```mermaid
 flowchart TB
-    navigation["Choose Simple, Extensive or Fluxor"] --> host["Orchestrator<br/>One Blazor WebAssembly runtime"]
-    host -->|"Entry component name"| components["BlazyComponent<br/>Name lookup and rendering"]
-    components -->|"Load on first request"| loader["RonSijm.Blazyload"]
-    loader --> burger["Simple: Burger"]
-    loader --> restaurant["Extensive: Bob's Burgers"]
-    burger -->|"pizza.calendar"| components
-    restaurant -->|"wonderwharf.events"| components
-    loader --> pizza["Pizza + services"]
-    loader --> wharf["Wonder Wharf + services"]
-    loader --> fluxorbob["Fluxor: Bob's Burgers"]
-    fluxorbob -->|"fluxor.wonderwharf.events / summary"| components
-    loader --> fluxorwharf["Fluxor: Wonder Wharf<br/>UI + state + reducers + effects + middleware"]
-    fluxorwharf --> store["One running Fluxor store"]
+    subgraph shared_host["One running Blazor app"]
+        navigation["Choose a demo"]
+        host["Orchestrator<br/>One Blazor WebAssembly runtime"]
+        navigation --> host
+    end
+
+    subgraph shared_loading["Shared component loading"]
+        components["BlazyComponent<br/>Name lookup and rendering"]
+        loader["RonSijm.Blazyload"]
+        components -->|"Load on first request"| loader
+    end
+
+    host -->|"Entry component name"| components
+```
+
+Every demo uses that same loading path for its entry component and later producer requests. The regions below show the feature boundaries; arrows are component-name requests through the shared loading services, not project references.
+
+```mermaid
+flowchart TB
+    subgraph simple["Simple domain"]
+        burger["Burger<br/>Consumer"]
+        pizza["Pizza + services<br/>Producer"]
+        burger -->|"pizza.calendar"| pizza
+    end
+
+    subgraph extensive["Extensive domain"]
+        restaurant["Bob's Burgers<br/>Consumer"]
+        wharf["Wonder Wharf + services<br/>Producer"]
+        restaurant -->|"wonderwharf.events"| wharf
+    end
+
+    subgraph fluxor["Fluxor domain"]
+        fluxorbob["Bob's Burgers<br/>Consumer"]
+        fluxorwharf["Wonder Wharf<br/>UI + state<br/>Reducers + effects + middleware"]
+        tracking["Optional publication tracking<br/>Late reducers + method effects"]
+        store["One running Fluxor store"]
+        fluxorbob -->|"Named calendar + summary"| fluxorwharf
+        fluxorwharf -->|"Optional named panel"| tracking
+        fluxorwharf --> store
+        tracking --> store
+    end
 ```
 
 Direct links and browser refreshes work too. GitHub Pages serves static files, so a request for `/Extensive/` needs an HTML file at that path. Publication copies the **same startup HTML**, `index.html`, into the `Simple`, `Extensive` and `Fluxor` folders. The copies point at the root app's assets; Blazor then selects the appropriate route.

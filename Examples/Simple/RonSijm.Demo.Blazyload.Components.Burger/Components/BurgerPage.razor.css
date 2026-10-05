@@ -1,13 +1,3 @@
-.pizza-calendar {
-    border: 3px solid rgb(180, 40, 20);
-    padding: 1rem;
-    overflow-wrap: anywhere;
-}
-
-.pizza-calendar img {
-    width: 48px;
-}
-
 .simple-code {
     padding: .75rem;
     border: 1px solid #ccc;

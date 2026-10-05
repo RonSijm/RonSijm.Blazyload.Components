@@ -25,11 +25,12 @@ public sealed class CalendarInitializedEffect() : PageEffect<EventCalendar>(Page
     }
 }
 
-public sealed class WharfSelectionEffect : Effect<PublishSelectedWharfEvent>
+public sealed class WharfSelectionEffect()
 {
     [Inject] public IState<WonderWharfViewModel> State { get; set; } = null!;
 
-    public override Task HandleAsync(PublishSelectedWharfEvent action, IDispatcher dispatcher)
+    [EffectMethod]
+    public Task HandleAsync(PublishSelectedWharfEvent action, IDispatcher dispatcher)
     {
         var selected = State.Value.Events.FirstOrDefault(item => item.Id == State.Value.SelectedEventId);
         if (selected is null)

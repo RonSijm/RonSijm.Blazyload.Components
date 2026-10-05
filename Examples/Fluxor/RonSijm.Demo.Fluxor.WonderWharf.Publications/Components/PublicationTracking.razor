@@ -1,0 +1,49 @@
+@inherits ViewModelComponent<WonderWharfViewModel>
+@attribute [BlazyComponent("fluxor.wonderwharf.publications")]
+@using Microsoft.Extensions.Logging
+@using RonSijm.Demo.Fluxor.WonderWharf.Publications.Services
+@inject WharfRuntimeExtensions Extensions
+@inject ILogger<PublicationTracking> Logger
+
+<section class="publication-tracking" data-testid="fluxor-tracking-panel">
+    <h3>Add behavior after the feature is already running</h3>
+    <p>This optional module has its own assembly. Loading this panel only registers its helper service; the controls below attach its Fluxor behavior.</p>
+    <p>Publication tracking: <strong data-testid="fluxor-tracking-status">@(ViewModel.IsPublicationTrackingEnabled ? "Attached" : "Not attached")</strong></p>
+    <p>Publications observed by a late reducer: <strong data-testid="fluxor-publication-count">@ViewModel.PublicationCount</strong></p>
+    <p>Instance method effect / constructor-injected audit-service calls: <strong data-testid="fluxor-publication-audit-count">@ViewModel.PublicationAuditCount</strong></p>
+    <div class="buttons">
+        <button data-testid="fluxor-tracking-fail" disabled="@(_registrationPending || ViewModel.IsPublicationTrackingEnabled)" @onclick="() => RegisterTrackingAsync(true)">Try missing extension dependency</button>
+        <button data-testid="fluxor-tracking-enable" disabled="@(_registrationPending || ViewModel.IsPublicationTrackingEnabled)" @onclick="() => RegisterTrackingAsync(false)">Attach publication tracking</button>
+        <button data-testid="fluxor-tracking-repeat" disabled="@(_registrationPending || !ViewModel.IsPublicationTrackingEnabled)" @onclick="() => RegisterTrackingAsync(false)">Register the same extension again</button>
+    </div>
+    @if (_registrationError is not null)
+    {
+        <p role="alert" data-testid="fluxor-registration-error">@_registrationError</p>
+    }
+    <p>The extension scans its assembly to add reducers to this existing feature plus instance and static <code>[EffectMethod]</code> handlers. The intentionally missing dependency fails during preparation, before those handlers are installed. A corrected registration can retry without replacing the store or resetting selection.</p>
+    <p>Register the same extension again, then publish from the calendar: the publication count still increases once, not twice. This retries behavior registration in an already-loaded module, not the assembly download or a failed component resolution.</p>
+</section>
+
+@code {
+    private bool _registrationPending;
+    private string? _registrationError;
+
+    private async Task RegisterTrackingAsync(bool simulateMissingDependency)
+    {
+        _registrationPending = true;
+        _registrationError = null;
+        try
+        {
+            await Extensions.RegisterPublicationTrackingAsync(simulateMissingDependency);
+        }
+        catch (InvalidOperationException exception) when (exception.Message.Contains(nameof(IWharfPublicationCounter), StringComparison.Ordinal))
+        {
+            Logger.LogWarning(exception, "Optional Wonder Wharf registration failed before completion");
+            _registrationError = exception.Message;
+        }
+        finally
+        {
+            _registrationPending = false;
+        }
+    }
+}

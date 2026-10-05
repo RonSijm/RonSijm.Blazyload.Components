@@ -99,7 +99,8 @@
                     <li><code>[Inject]</code> properties work on effects for HTTP, JavaScript, state, logging and navigation dependencies.</li>
                     <li><code>[ReduceInto]</code> projects Bob's restaurant/preferences state into the shell without duplicate reducers.</li>
                     <li>Dynamic registration attaches method reducers, reducer classes, typed effect classes and middleware.</li>
-                    <li>The host's startup <code>[EffectMethod]</code> audit logs assembly registration. Version 1.0.0 does not dynamically attach method-effect wrappers, so the lazy feature uses typed effect classes.</li>
+                    <li>Lazy <code>[EffectMethod]</code> wrappers join the existing store and receive injected state. The producer's publish button uses that method-based style alongside its typed HTTP effect.</li>
+                    <li>The producer can attach more reducers and instance/static method effects after loading. Its optional tracking controls demonstrate preparation failure, corrected retry and repeat registration without duplicate handlers.</li>
                     <li>The runtime and component tests use the same provider factory, so injection behavior is not replaced by a simpler test-only setup.</li>
                 </ul>
             </article>
@@ -111,7 +112,7 @@
         <h2>Follow one request</h2>
         <ol>
             <li><code>BlazyComponent</code> resolves the name from the catalog; Blazyload downloads the feature.</li>
-            <li>The bootstrap scans only its own assembly with <code>AddFluxorLibrary</code> and registers its service.</li>
+            <li>The bootstrap uses <code>AddFluxorLibrary</code> to scan its assembly and register its services. Optional publication tracking has a separate assembly and is deliberately registered later.</li>
             <li>Syringe adds the feature, attached reducers, effects and middleware to the existing store before loading returns.</li>
             <li><code>ViewModelComponent</code> subscribes to state and dispatches an initialization lifecycle action.</li>
             <li>A lifecycle effect dispatches <code>LoadWharfEvents</code>. A property-injected effect calls the HTTP service, then dispatches success or failure.</li>

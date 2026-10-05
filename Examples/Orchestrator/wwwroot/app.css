@@ -94,3 +94,16 @@ button:disabled {
     margin-top: 1rem;
     overflow-wrap: anywhere;
 }
+
+.orchestrator-code {
+    padding: 1rem;
+    border-radius: .4rem;
+    background: #29221e;
+    color: #fff7e9;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.orchestrator-explanation {
+    overflow-wrap: anywhere;
+}
